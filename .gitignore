@@ -1,0 +1,20 @@
+﻿# Local reference books and extracted helper files
+books/
+.tmp_pdf_lib/
+
+# Local agent/app metadata
+.agents/
+.codex/
+
+# Local/editor/system files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.log
+
+# Temporary Git metadata workaround
+.tmp_git_store/

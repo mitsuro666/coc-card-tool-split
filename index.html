@@ -1,0 +1,577 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COC车卡工具</title>
+  <link rel="icon" href="data:," />
+  <!-- 拆分版：样式、数据与交互逻辑已分离，便于后续在 Codex 中维护。 -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <button class="float-toggle notes-toggle" id="notesToggle">备忘笔记</button>
+  <button class="float-toggle preview-toggle" id="previewToggle">档案预览</button>
+
+  <aside class="floating-panel floating-notes" id="floatingNotes" aria-label="备忘笔记浮窗">
+    <div class="panel-head">
+      <strong>备忘笔记</strong>
+      <button type="button" id="clearNotes">清空</button>
+    </div>
+    <textarea id="notesArea" placeholder="可放车卡要求或人物背景。&#10;&#10;例：推荐技能：侦查、聆听、图书馆&#10;购点规则：幸运3D6×5，外貌50-80"></textarea>
+  </aside>
+
+  <aside class="floating-panel floating-preview" id="floatingPreview" aria-label="档案预览浮窗">
+    <div class="panel-head">
+      <strong>档案预览</strong>
+      <button type="button" id="closePreview">关闭</button>
+    </div>
+    <div class="preview-body">
+      <details class="preview-section" open>
+        <summary>基础信息</summary>
+        <div class="preview-list">
+          <div><span>姓名</span><strong id="pvName">未填写</strong></div>
+          <div><span>玩家</span><strong id="pvPlayer">未填写</strong></div>
+          <div><span>时代</span><strong id="pvEra">未选择</strong></div>
+          <div><span>职业</span><strong id="pvOccupation">未填写</strong></div>
+          <div><span>年龄</span><strong id="pvAge">未填写</strong></div>
+          <div><span>性别</span><strong id="pvGender">未填写</strong></div>
+          <div><span>住地</span><strong id="pvResidence">未填写</strong></div>
+          <div><span>故乡</span><strong id="pvBirthplace">未填写</strong></div>
+          <div><span>发生地</span><strong id="pvStoryLocation">未填写</strong></div>
+          <div><span>现时间</span><strong id="pvCurrentTime">未填写</strong></div>
+        </div>
+      </details>
+      <details class="preview-section">
+        <summary>属性</summary>
+        <div class="preview-list" id="attributePreviewList"></div>
+      </details>
+      <details class="preview-section">
+        <summary>次要属性</summary>
+        <div class="preview-list" id="secondaryPreviewList"></div>
+      </details>
+      <details class="preview-section">
+        <summary>技能</summary>
+        <div class="preview-skill-list" id="skillPreviewList"></div>
+      </details>
+    </div>
+  </aside>
+
+  <main class="app-shell">
+    <section class="topbar">
+      <div class="title-block">
+        <h1 id="pageTitle">COC车卡工具</h1>
+      </div>
+      <nav class="progress-pill step-nav" id="progressPill" aria-label="车卡步骤"></nav>
+    </section>
+
+    <section class="page" id="profilePage">
+      <section class="card">
+        <div class="card-header with-actions">
+          <h2>基础信息</h2>
+          <button class="header-reset" type="button" id="resetProfileBtn">清空本页</button>
+        </div>
+
+        <form class="form-grid" id="profileForm">
+          <div class="field">
+            <label for="investigatorName">姓名</label>
+            <input id="investigatorName" name="investigatorName" type="text" placeholder="" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="playerName">玩家</label>
+            <input id="playerName" name="playerName" type="text" placeholder="" autocomplete="off" />
+          </div>
+
+
+
+          <div class="field">
+            <label for="age">年龄</label>
+            <input id="age" name="age" type="text" inputmode="numeric" placeholder="" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="gender">性别</label>
+            <input id="gender" name="gender" type="text" placeholder="" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="residence">住地</label>
+            <input id="residence" name="residence" type="text" placeholder="" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="birthplace">故乡</label>
+            <input id="birthplace" name="birthplace" type="text" placeholder="" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="storyLocationChoice">发生地</label>
+            <select id="storyLocationChoice">
+              <option value="">请选择发生地</option>
+              <option value="中国">中国</option>
+              <option value="日本">日本</option>
+              <option value="亚洲">亚洲</option>
+              <option value="美洲">美洲</option>
+              <option value="欧洲">欧洲</option>
+              <option value="非洲">非洲</option>
+              <option value="自定义">自定义</option>
+            </select>
+            <input class="custom-era" id="storyLocation" name="storyLocation" type="text" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="era">时代</label>
+            <select id="era" name="era">
+              <option value="">请选择时代</option>
+              <option value="未来">未来</option>
+              <option value="古代">古代</option>
+              <option value="近代">近代</option>
+              <option value="现代">现代</option>
+              <option value="1920s">1920s</option>
+              <option value="未知">未知</option>
+              <option value="架空">架空</option>
+              <option value="自定义">自定义</option>
+            </select>
+            <input class="custom-era" id="customEra" type="text" autocomplete="off" />
+          </div>
+
+          <div class="field current-time-field">
+            <label>现时间</label>
+            <div class="current-time-inputs">
+              <label><input id="currentYear" type="text" inputmode="numeric" autocomplete="off" /><span>年</span></label>
+              <label><input id="currentMonth" type="text" inputmode="numeric" autocomplete="off" /><span>月</span></label>
+              <label><input id="currentDay" type="text" inputmode="numeric" autocomplete="off" /><span>日</span></label>
+              <label><input id="currentMinute" type="text" inputmode="numeric" autocomplete="off" /><span>分</span></label>
+              <label><input id="currentSecond" type="text" inputmode="numeric" autocomplete="off" /><span>秒</span></label>
+            </div>
+          </div>
+
+          <div class="field profession-wrap">
+            <label for="occupation">职业</label>
+            <div class="profession-input-wrap">
+              <input id="occupation" name="occupation" type="text" placeholder="" autocomplete="off" />
+              <input id="occupationId" name="occupationId" type="hidden" />
+              <div class="profession-results" id="professionResults"></div>
+            </div>
+            <div class="field-actions">
+              <button class="secondary" type="button" id="autoMatchOccupation">自动匹配</button>
+              <button class="ghost" type="button" id="customOccupation">自定义职业</button>
+            </div>
+            <div class="hint" id="occupationHint" hidden></div>
+          </div>
+
+
+
+        </form>
+      </section>
+
+      <section class="toolbar">
+        <div class="status" id="saveStatus">已启用本地自动保存。</div>
+        <div class="buttons">
+          <button type="button" id="nextBtn">下一步：属性购点 →</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="attributePage" hidden>
+      <section class="card">
+        <div class="card-header with-actions">
+          <h2>属性购点</h2>
+          <button class="header-reset" type="button" id="resetAttributesBtn">清空本页</button>
+        </div>
+
+        <div class="attribute-board">
+          <div class="attribute-topline">
+            <div class="attribute-summary-bar">
+              <div class="used-points-inline">
+                <span>已使用点数：</span><strong id="usedPoints">0</strong>
+                <label class="compact-check" for="includeLuckInTotal">
+                  <input id="includeLuckInTotal" type="checkbox" />
+                  幸运计入已使用点数
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="attribute-sheet" id="attributeSheet"></div>
+
+          <div class="roll-panel">
+            <div class="roll-panel-head">
+              <strong>随机属性</strong>
+              <div class="roll-actions">
+                <button type="button" id="rollOneAttributes">生成1组</button>
+                <button class="secondary" type="button" id="rollFiveAttributes">生成5组</button>
+                <button class="ghost" type="button" id="clearRollHistory">清空记录</button>
+              </div>
+            </div>
+            <div class="roll-history" id="rollHistory">
+              <div class="roll-empty">暂无生成结果。</div>
+            </div>
+          </div>
+          <section class="age-adjustment-panel">
+            <div class="age-adjustment-head">
+              <h3>年龄补正</h3>
+              <label class="compact-check" for="ageAdjustmentEnabled">
+                <input id="ageAdjustmentEnabled" type="checkbox" />
+                使用年龄补正
+              </label>
+            </div>
+            <p class="age-adjustment-rule" id="ageAdjustmentRule">请先在基础信息页填写年龄。</p>
+          </section>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="status" id="attributeStatus">属性会自动保存，已使用点数实时计算。完成属性购点后，可在档案预览中确认次要属性。</div>
+        <div class="buttons">
+          <button class="secondary" type="button" id="backToProfile">← 上一步：基础信息</button>
+          <button type="button" id="nextAttributesBtn">下一步：技能加点 →</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="skillPage" hidden>
+      <section class="card">
+        <div class="card-header with-actions">
+          <h2>技能加点</h2>
+          <button class="header-reset" type="button" id="resetSkillsBtn">清空本页</button>
+        </div>
+
+        <div class="skills-board">
+          <div class="occupation-info-strip" id="skillOccupationInfo">
+            <div>
+              <span>职业</span>
+              <strong id="skillOccupationName">未选择</strong>
+            </div>
+            <div>
+              <span>职业属性</span>
+              <strong id="skillOccupationFormula">未读取</strong>
+            </div>
+            <div class="occupation-skills-note">
+              <span>本职技能说明</span>
+              <strong id="skillOccupationSkillsText">选择职业后显示。</strong>
+            </div>
+          </div>
+
+          <div class="skill-summary-bar">
+            <div>职业点数：<strong id="careerPointSummary">0 / 未计算</strong></div>
+            <div>兴趣点数：<strong id="interestPointSummary">0 / 未计算</strong></div>
+            <div class="skill-credit-control">
+              <label for="creditRatingValue">信用评级</label>
+              <input id="creditRatingValue" type="number" inputmode="numeric" min="0" autocomplete="off" />
+              <span class="credit-range-text">范围 <strong id="creditRangeSummary">未读取</strong></span>
+            </div>
+          </div>
+
+          <div class="skill-tools">
+            <select id="skillSort" aria-label="技能排序">
+              <option value="priority">默认排序</option>
+              <option value="common">常用优先</option>
+              <option value="added">已加点优先</option>
+              <option value="total-desc">数值从高到低</option>
+              <option value="name">名称排序</option>
+            </select>
+            <div class="skill-filters" aria-label="技能筛选">
+              <button class="skill-filter-btn active" type="button" data-skill-filter="all">全部</button>
+              <button class="skill-filter-btn" type="button" data-skill-filter="occupation">本职</button>
+              <button class="skill-filter-btn" type="button" data-skill-filter="common">常用</button>
+              <button class="skill-filter-btn" type="button" data-skill-filter="added">已加点</button>
+            </div>
+            <input id="skillSearch" type="text" placeholder="搜索技能" autocomplete="off" />
+            <button class="skill-add-btn" type="button" id="addCustomSkillBtn">添加自定义技能</button>
+          </div>
+
+          <div class="skill-list" id="skillList"></div>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="status" id="skillStatus">技能会自动保存，合计值实时计算。</div>
+        <div class="buttons">
+          <button class="secondary" type="button" id="backToAttributes">← 上一步：属性购点</button>
+          <button type="button" id="nextSkillsBtn">下一步：背景&物品 →</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="itemsPage" hidden>
+      <section class="card">
+        <div class="card-header with-actions">
+          <h2>背景&物品</h2>
+          <button class="header-reset" type="button" id="resetItemsBtn">清空本页</button>
+        </div>
+
+        <div class="items-board">
+          <details class="collapse-section" id="assetDetails" open>
+            <summary>资产与现金</summary>
+            <section class="asset-section">
+            <div class="asset-summary-grid" aria-label="资产与现金">
+              <div class="asset-summary-cell"><span>信用评级</span><strong id="assetCreditDisplay">0%/0%/0%</strong></div>
+              <div class="asset-summary-cell"><span>生活水平</span><strong id="assetLifestyleDisplay">身无分文</strong></div>
+              <div class="asset-summary-cell"><span>消费水平</span><strong id="assetSpendingDisplay">0.5</strong></div>
+              <div class="asset-summary-cell"><span>其他资产</span><strong id="assetOtherDisplay">没有</strong></div>
+              <div class="asset-summary-cell"><span>当前现金</span><strong id="assetCashDisplay">0.5</strong></div>
+              <div class="asset-summary-cell"><span>单位</span><strong id="assetUnitDisplay">美元</strong></div>
+            </div>
+
+            <div class="asset-detail-grid">
+              <section class="asset-note-box">
+                <h3>生活评价</h3>
+                <div class="asset-note-text" id="assetLifestyleNote">连贫穷都够不上的人才能够叫做身无分文。</div>
+              </section>
+              <section class="asset-manual-box">
+                <h3>资产详情</h3>
+                <textarea id="assetDetailNote" placeholder="请在这里详述你的资产"></textarea>
+              </section>
+            </div>
+
+            <section class="other-assets-board">
+              <h3 class="subsection-title">其他资产表</h3>
+              <div class="other-assets-grid">
+                <div class="other-asset-cell">
+                  <label for="assetVehicle">交通工具</label>
+                  <input id="assetVehicle" type="text" autocomplete="off" />
+                  <input id="assetVehicleValue" type="number" inputmode="numeric" placeholder="价值" />
+                </div>
+                <div class="other-asset-cell">
+                  <label for="assetResidence">住所</label>
+                  <input id="assetResidence" type="text" autocomplete="off" />
+                  <input id="assetResidenceValue" type="number" inputmode="numeric" placeholder="价值" />
+                </div>
+                <div class="other-asset-cell">
+                  <label for="assetLuxury">奢侈品</label>
+                  <input id="assetLuxury" type="text" autocomplete="off" />
+                  <input id="assetLuxuryValue" type="number" inputmode="numeric" placeholder="价值" />
+                </div>
+                <div class="other-asset-cell">
+                  <label for="assetStock">股票/证券等</label>
+                  <input id="assetStock" type="text" autocomplete="off" />
+                  <input id="assetStockValue" type="number" inputmode="numeric" placeholder="价值" />
+                </div>
+                <div class="other-asset-cell">
+                  <label for="assetOtherNote">其他</label>
+                  <input id="assetOtherNote" type="text" autocomplete="off" />
+                  <input id="assetOtherValue" type="number" inputmode="numeric" placeholder="价值" />
+                </div>
+              </div>
+              <div class="asset-mini-hint" id="assetTotalHint">资产总和：0　剩余资产值：0</div>
+            </section>
+            </section>
+          </details>
+
+          <details class="collapse-section" id="backgroundDetails">
+            <summary>背景故事</summary>
+            <div class="background-grid" id="backgroundGrid"></div>
+          </details>
+
+          <details class="collapse-section" id="inventoryDetails">
+            <summary>随身物品</summary>
+            <div class="inventory-board">
+              <section class="inventory-column">
+                <div class="inventory-head">
+                  <h3>武器防具</h3>
+                  <button class="small secondary" type="button" id="addWeaponItem">添加</button>
+                </div>
+                <div class="inventory-list" id="weaponArmorList"></div>
+              </section>
+              <section class="inventory-column">
+                <div class="inventory-head">
+                  <h3>其他物品</h3>
+                  <button class="small secondary" type="button" id="addOtherItem">添加</button>
+                </div>
+                <div class="inventory-list" id="otherItemList"></div>
+              </section>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="status" id="itemsStatus">资产、背景与物品会自动保存。</div>
+        <div class="buttons">
+          <button class="secondary" type="button" id="backToSkills">← 上一步：技能加点</button>
+          <button type="button" id="nextItemsBtn">下一步：头像立绘 →</button>
+        </div>
+      </section>
+    </section>
+
+
+    <section class="page" id="imagePage" hidden>
+      <section class="card">
+        <div class="card-header with-actions">
+          <h2>头像立绘</h2>
+          <button class="header-reset" type="button" id="resetImagesBtn">清空本页</button>
+        </div>
+
+        <div class="images-board">
+          <div class="image-upload-grid">
+            <section class="image-card" data-image-slot="avatar">
+              <div class="image-card-head">
+                <h3>头像</h3>
+              </div>
+              <div class="image-preview-box" id="avatarPreview"></div>
+              <div class="image-actions">
+                <label class="image-file-button" for="avatarImageInput">选择图片</label>
+                <input class="image-file-input" id="avatarImageInput" type="file" accept="image/*" data-image-input="avatar" />
+                <button class="ghost small" type="button" data-clear-image="avatar">移除</button>
+              </div>
+            </section>
+
+            <section class="image-card" data-image-slot="portrait">
+              <div class="image-card-head">
+                <h3>立绘</h3>
+              </div>
+              <div class="image-preview-box portrait-preview" id="portraitPreview"></div>
+              <div class="image-actions">
+                <label class="image-file-button" for="portraitImageInput">选择图片</label>
+                <input class="image-file-input" id="portraitImageInput" type="file" accept="image/*" data-image-input="portrait" />
+                <button class="ghost small" type="button" data-clear-image="portrait">移除</button>
+              </div>
+            </section>
+          </div>
+
+          <section class="custom-images-section">
+            <div class="inventory-head">
+              <h3>自定义图片</h3>
+              <button class="small secondary" type="button" id="addCustomImageBtn">添加</button>
+            </div>
+            <div class="custom-image-list" id="customImageList"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="status" id="imageStatus">上传后会自动保存。</div>
+        <div class="buttons">
+          <button class="secondary" type="button" id="backToItems">← 上一步：背景&物品</button>
+          <button class="ghost" type="button" id="skipImagesBtn">跳过</button>
+          <button type="button" id="nextImagesBtn">下一步：角色生成 →</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="page" id="finalPage" hidden>
+      <section class="card">
+        <div class="card-header">
+          <h2>角色生成</h2>
+        </div>
+
+        <div class="final-board">
+          <section class="final-summary" id="finalSummary"></section>
+          <div class="final-actions">
+            <button class="secondary" type="button" id="backFinalToImages">← 上一步：头像立绘</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="toolbar">
+        <div class="status" id="finalStatus">角色卡已生成，可返回前面步骤继续修改。</div>
+        <div class="buttons">
+          <button class="secondary" type="button" id="backFinalToItems">返回背景&物品</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="matchModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="matchModalTitle">
+      <div class="modal-head">
+        <h3 id="matchModalTitle">确认职业</h3>
+        <button class="modal-close" type="button" data-close-modal="matchModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p>没有找到完全一致的职业。是否使用下方匹配结果？</p>
+        <div class="match-card">
+          <strong id="matchName">职业名</strong>
+          <span id="matchMeta">职业信息</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost" type="button" data-close-modal="matchModal">取消</button>
+        <button type="button" id="confirmMatch">使用该职业</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="customProfessionModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="customProfessionTitle">
+      <div class="modal-head">
+        <h3 id="customProfessionTitle">自定义职业</h3>
+        <button class="modal-close" type="button" data-close-modal="customProfessionModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="customProfessionName">职业名称</label>
+          <input id="customProfessionName" type="text" />
+        </div>
+        <div class="field">
+          <label for="customCreditRange">信用评级范围</label>
+          <input id="customCreditRange" type="text" />
+        </div>
+        <div class="field">
+          <label for="customSkillFormula">职业技能点规则</label>
+          <input id="customSkillFormula" type="text" placeholder="例：教育X2" />
+        </div>
+        <div class="field">
+          <label for="customProfessionSkills">职业技能</label>
+          <textarea id="customProfessionSkills" rows="4"></textarea>
+        </div>
+        <div class="field">
+          <label for="customProfessionNote">备注</label>
+          <textarea id="customProfessionNote" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost" type="button" data-close-modal="customProfessionModal">取消</button>
+        <button type="button" id="saveCustomProfession">保存职业</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" id="customSkillModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="customSkillTitle">
+      <div class="modal-head">
+        <h3 id="customSkillTitle">添加自定义技能</h3>
+        <button class="modal-close" type="button" data-close-modal="customSkillModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="field">
+          <label for="customSkillName">技能名称</label>
+          <input id="customSkillName" type="text" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="customSkillBase">初始值</label>
+          <input id="customSkillBase" type="number" inputmode="numeric" min="0" autocomplete="off" />
+        </div>
+        <div class="field compact-checkbox-row">
+          <label class="switch-line">
+            <input id="customSkillOccupation" type="checkbox" />
+            <span>添加后标为本职技能</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="ghost" type="button" data-close-modal="customSkillModal">取消</button>
+        <button type="button" id="saveCustomSkill">添加技能</button>
+      </div>
+    </section>
+  </div>
+  <script src="data/occupations.js"></script>
+  <script src="data/skills.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/preview.js"></script>
+  <script src="js/profile.js"></script>
+  <script src="js/attributes.js"></script>
+  <script src="js/skills.js"></script>
+  <script src="js/background-items.js"></script>
+  <script src="js/images.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
+
+
+
