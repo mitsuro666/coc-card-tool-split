@@ -1,4 +1,4 @@
-let customSkillData = [];
+﻿let customSkillData = [];
 
     function getAllSkills() {
       return [...skillDatabase, ...customSkillData];
@@ -33,6 +33,26 @@ let customSkillData = [];
       { key: "Luck", name: "幸运", id: "attrLuck", roll: "3d6", isLuck: true }
     ];
 
+
+    const attributeNotes = {
+      attrSTR: "衡量了你的调查员能发挥出的纯粹的身体力量，影响伤害加值和体格。",
+      attrCON: "用于衡量你的调查员的健康与强韧程度。",
+      attrPOW: "包括了意志力、灵魂与精神的强韧度。",
+      attrDEX: "用于衡量你的调查员身体的灵活性与速度。",
+      attrAPP: "衡量了你的角色外在的长相。",
+      attrSIZ: "反映了你的调查员的身高与体重。",
+      attrINT: "大致地衡量了你的调查员的聪明程度，以及逻辑与直觉的思维能力。",
+      attrEDU: "用于衡量你的调查员通过正规教育或“社会磨练”所积累的知识。",
+      attrLuck: "通过投掷3D6并将其结果乘5来计算幸运值。幸运检定通常用于确定现在的状况是否在向对你有利的方向发展。"
+    };
+
+    const secondaryAttributeNotes = {
+      hp: "该数值等同于体型与体质相加后除以十，小数点向下取整。当你的调查员在战斗或其他事件中受到伤害，你的耐久值就会降低。",
+      san: "起始值等同于调查员的意志值。这一数值代表你的调查员在恐惧面前保持镇定的能力。当你遭遇克苏鲁神话中的怪物时，你的理智值就会发生变动。",
+      mp: "等同于意志的五分之一值，魔法值被用于施放法术与为神秘装置或魔法效果供能。被消耗的魔法值会自然恢复。",
+      db: "伤害加值决定了你的调查员在一次成功的近战攻击（肉搏）能额外造成多少伤害。体格则是由体型和力量共同决定的，用于“战技”的数值。",
+      build: "伤害加值决定了你的调查员在一次成功的近战攻击（肉搏）能额外造成多少伤害。体格则是由体型和力量共同决定的，用于“战技”的数值。"
+    };
     const profileFields = [
       "investigatorName", "playerName", "era", "customEra", "occupation", "occupationId",
       "age", "gender", "residence", "birthplace", "storyLocation", "currentYear", "currentMonth", "currentDay", "currentMinute", "currentSecond", "notesArea"
@@ -88,6 +108,7 @@ let customSkillData = [];
     let currentSkillFilter = "all";
     let inventoryData = { weapons: [], others: [] };
     let imageData = { avatar: "", portrait: "", custom: [] };
+let ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
 
     const notesToggle = $("notesToggle");
     const previewToggle = $("previewToggle");
@@ -104,6 +125,53 @@ let customSkillData = [];
     const occupationHint = $("occupationHint");
     const creditRatingValue = $("creditRatingValue");
 
+
+    function getInfoNoteText(type, key) {
+      if (type === "attribute") return attributeNotes[key] || "";
+      if (type === "secondary") return secondaryAttributeNotes[key] || "";
+      return "";
+    }
+
+    function hideInfoNote() {
+      const note = $("infoNoteBubble");
+      if (note) note.hidden = true;
+    }
+
+    function showInfoNote(target, text) {
+      if (!target || !text) return;
+      let note = $("infoNoteBubble");
+      if (!note) {
+        note = document.createElement("div");
+        note.id = "infoNoteBubble";
+        note.className = "info-note-bubble";
+        note.hidden = true;
+        document.body.appendChild(note);
+      }
+      note.textContent = text;
+      note.hidden = false;
+      const rect = target.getBoundingClientRect();
+      const width = Math.min(300, window.innerWidth - 24);
+      const left = Math.min(Math.max(12, rect.left), window.innerWidth - width - 12);
+      note.style.width = `${width}px`;
+      note.style.left = `${left}px`;
+      note.style.top = `${rect.bottom + 8}px`;
+    }
+
+    function initInfoNotes() {
+      document.addEventListener("click", (event) => {
+        const trigger = event.target.closest("[data-info-note]");
+        if (!trigger) {
+          if (!event.target.closest("#infoNoteBubble")) hideInfoNote();
+          return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const text = getInfoNoteText(trigger.dataset.infoType, trigger.dataset.infoKey);
+        showInfoNote(trigger, text);
+      });
+      window.addEventListener("scroll", hideInfoNote, true);
+      window.addEventListener("resize", hideInfoNote);
+    }
     function showStatus(id, message, isError = false) {
       const status = $(id);
       if (!status) return;
@@ -124,3 +192,5 @@ let customSkillData = [];
     function escapeHTML(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
     }
+
+

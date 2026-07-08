@@ -1,5 +1,6 @@
-function initApp() {
+﻿function initApp() {
   initModal();
+  initInfoNotes();
   initNotes();
   initPreview();
   initProfile();
@@ -21,4 +22,5 @@ function initApp() {
 }
 
 initApp();
+
 

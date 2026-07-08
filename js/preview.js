@@ -1,4 +1,4 @@
-const previewDirty = {
+﻿const previewDirty = {
   basic: true,
   attributes: true,
   secondary: true,
@@ -99,11 +99,22 @@ function renderAttributePreview() {
   previewDirty.attributes = false;
 }
 
+function getSecondaryInfoKey(label) {
+  if (label.includes("耐久值")) return "hp";
+  if (label.includes("理智值")) return "san";
+  if (label.includes("魔法值")) return "mp";
+  if (label.includes("伤害加值")) return "db";
+  if (label.includes("体格")) return "build";
+  return "";
+}
+
 function renderSecondaryPreview() {
   const list = $("secondaryPreviewList");
   if (!list) return;
   list.innerHTML = calculateSecondaryAttributes().map((item) => {
-    return `<div><span>${item.label}</span><strong>${formatDerivedValue(item.value)}</strong></div>`;
+    const infoKey = getSecondaryInfoKey(item.label);
+    const info = infoKey ? `<span class="info-dot secondary-info-trigger" data-info-note data-info-type="secondary" data-info-key="${infoKey}" aria-label="次要属性说明">i</span>` : "";
+    return `<div><span>${item.label}${info}</span><strong>${formatDerivedValue(item.value)}</strong></div>`;
   }).join("");
   previewDirty.secondary = false;
 }
@@ -161,3 +172,4 @@ function initPreview() {
     });
   });
 }
+

@@ -254,6 +254,18 @@ function initProfile() {
     const el = $(id);
     if (!el || id === "occupation") return;
     el.addEventListener("input", () => {
+      if (id === "age" && ageAdjustmentState && ageAdjustmentState.age && el.value.trim() !== ageAdjustmentState.age) {
+        if (ageAdjustmentState.applied) {
+          const confirmed = confirm("已使用年龄补正，是否确认修改年龄？修改后，已适用的年龄补正将会全部失效。");
+          if (!confirmed) {
+            el.value = ageAdjustmentState.age || "";
+            return;
+          }
+          if (typeof handleAgeChangedAfterAdjustment === "function") handleAgeChangedAfterAdjustment();
+        } else if (typeof resetAgeAdjustmentState === "function") {
+          resetAgeAdjustmentState();
+        }
+      }
       markPreviewDirty(id === "age" ? "secondary" : "basic");
       updateAssetCalculations();
       persist();
@@ -285,4 +297,7 @@ function initProfile() {
     showStatus("saveStatus", "已清空本页内容。");
   });
 }
+
+
+
 

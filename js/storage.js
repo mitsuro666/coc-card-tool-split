@@ -1,4 +1,4 @@
-let saveTimer = null;
+﻿let saveTimer = null;
 
 function collectData() {
   const profile = {};
@@ -17,7 +17,7 @@ function collectData() {
     profile,
     attributes: attributeData,
     includeLuckInTotal: $("includeLuckInTotal").checked,
-    ageAdjustmentEnabled: $("ageAdjustmentEnabled").checked,
+    ageAdjustmentState,
     rollHistoryData,
     skills: skillPointData,
     customSkills: customSkillData,
@@ -80,7 +80,9 @@ function restore() {
         if (el !== null) el.value = value;
       });
       $("includeLuckInTotal").checked = Boolean(data.includeLuckInTotal);
-      $("ageAdjustmentEnabled").checked = Boolean(data.ageAdjustmentEnabled);
+      ageAdjustmentState = data.ageAdjustmentState && typeof data.ageAdjustmentState === "object"
+        ? { applied: Boolean(data.ageAdjustmentState.applied), age: String(data.ageAdjustmentState.age || ""), adjustments: data.ageAdjustmentState.adjustments || {}, movePenalty: Number(data.ageAdjustmentState.movePenalty || 0), messages: Array.isArray(data.ageAdjustmentState.messages) ? data.ageAdjustmentState.messages : [] }
+        : { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
       rollHistoryData = Array.isArray(data.rollHistoryData) ? data.rollHistoryData.slice(0, 5) : [];
       skillPointData = data.skills && typeof data.skills === "object" ? data.skills : {};
       customSkillData = Array.isArray(data.customSkills) ? data.customSkills.map(normalizeCustomSkill).filter(Boolean) : [];
@@ -169,4 +171,6 @@ function restore() {
 function initStorage() {
   window.addEventListener("beforeunload", () => flushPersist(true));
 }
+
+
 

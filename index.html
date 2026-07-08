@@ -211,12 +211,21 @@
           <section class="age-adjustment-panel">
             <div class="age-adjustment-head">
               <h3>年龄补正</h3>
-              <label class="compact-check" for="ageAdjustmentEnabled">
-                <input id="ageAdjustmentEnabled" type="checkbox" />
-                使用年龄补正
-              </label>
+              <p class="age-adjustment-note">如果年龄有修改，年龄补正会失效退回初始状态。</p>
+              <div class="age-adjustment-actions">
+                <button class="secondary small" type="button" id="applyAgeAdjustmentBtn">使用年龄补正</button>
+                <button class="ghost small" type="button" id="cancelAgeAdjustmentBtn" disabled>取消年龄补正</button>
+              </div>
             </div>
             <p class="age-adjustment-rule" id="ageAdjustmentRule">请先在基础信息页填写年龄。</p>
+          </section>
+
+          <section class="secondary-attribute-panel">
+            <div class="secondary-attribute-head">
+              <h3>次要属性</h3>
+              <p>不可更改，如有需要，可在生成角色卡之后更改。</p>
+            </div>
+            <div class="secondary-attribute-list" id="secondaryAttributeList"></div>
           </section>
         </div>
       </section>
@@ -556,6 +565,19 @@
       </div>
     </section>
   </div>
+
+  <div class="modal-backdrop" id="ageAdjustmentModal" aria-hidden="true">
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="ageAdjustmentModalTitle">
+      <div class="modal-head">
+        <h3 id="ageAdjustmentModalTitle">年龄补正</h3>
+        <button class="modal-close" type="button" data-close-modal="ageAdjustmentModal">×</button>
+      </div>
+      <div class="modal-body age-adjustment-result" id="ageAdjustmentResult"></div>
+      <div class="modal-actions">
+        <button type="button" data-close-modal="ageAdjustmentModal">确认</button>
+      </div>
+    </section>
+  </div>
   <script src="data/occupations.js"></script>
   <script src="data/skills.js"></script>
   <script src="js/state.js"></script>
@@ -572,6 +594,16 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
 
 
 

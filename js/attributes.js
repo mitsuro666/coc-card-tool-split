@@ -6,8 +6,10 @@
         <div class="attr-name">
           <strong>${attribute.name}</strong>
           <span>${attribute.key}</span>
+          <span class="info-dot attr-info-trigger" data-info-note data-info-type="attribute" data-info-key="${attribute.id}" aria-label="属性说明">i</span>
         </div>
         <div class="attr-value-wrap">
+                    <span class="age-adjustment-badge" id="${attribute.id}AgeAdjustment" hidden></span>
           ${attribute.isLuck ? `<button class="random-luck-btn secondary" type="button" id="randomLuckBtn">随机生成</button>` : ""}
           <input class="attr-input" id="${attribute.id}" type="text" inputmode="numeric" autocomplete="off" />
         </div>
@@ -33,12 +35,15 @@ function formatDerivedValue(value) {
 }
 
 function getAgeMovePenalty() {
-  if (!$("ageAdjustmentEnabled") || !$("ageAdjustmentEnabled").checked) return 0;
-  const ageValue = Number(String($("age").value || "").trim());
-  if (!Number.isFinite(ageValue) || ageValue < 40) return 0;
-  return Math.max(0, Math.floor(ageValue / 10) - 3);
+  const currentAge = String($("age") ? $("age").value : "").trim();
+  return ageAdjustmentState && ageAdjustmentState.applied && ageAdjustmentState.age === currentAge ? Number(ageAdjustmentState.movePenalty || 0) : 0;
 }
 
+function resetAgeAdjustmentState() {
+  ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
+  renderAgeAdjustmentBadges();
+  updateAgeAdjustmentInfo();
+}
 
 function getAgeNumber() {
   const value = Number(String($("age") ? $("age").value : "").trim());
@@ -47,20 +52,36 @@ function getAgeNumber() {
 
 function getAgeAdjustmentRule() {
   const age = getAgeNumber();
-  if (age === null) return { text: "请先在基础信息页填写年龄。", physical: 0, app: 0, edu: 0, eduChecks: 0, targets: [] };
-  if (age < 15) return { text: "年龄低于常规调查员范围，请与 KP 确认是否使用年龄补正。", physical: 0, app: 0, edu: 0, eduChecks: 0, targets: [] };
-  if (age <= 19) return { text: "15-19岁：从力量和体型里随机合计 -5，教育 -5。幸运取高暂不自动处理。", physical: 5, app: 0, edu: 5, eduChecks: 0, targets: ["attrSTR", "attrSIZ"] };
-  if (age <= 39) return { text: "20-39岁：可进行 1 次教育进步检定。", physical: 0, app: 0, edu: 0, eduChecks: 1, targets: [] };
-  if (age <= 49) return { text: "40-49岁：从力量、体质、敏捷里随机合计 -5，外貌 -5，移动力 -1；可进行 2 次教育进步检定。", physical: 5, app: 5, edu: 0, eduChecks: 2, targets: ["attrSTR", "attrCON", "attrDEX"] };
-  if (age <= 59) return { text: "50-59岁：从力量、体质、敏捷里随机合计 -10，外貌 -10，移动力 -2；可进行 3 次教育进步检定。", physical: 10, app: 10, edu: 0, eduChecks: 3, targets: ["attrSTR", "attrCON", "attrDEX"] };
-  if (age <= 69) return { text: "60-69岁：从力量、体质、敏捷里随机合计 -20，外貌 -15，移动力 -3；可进行 4 次教育进步检定。", physical: 20, app: 15, edu: 0, eduChecks: 4, targets: ["attrSTR", "attrCON", "attrDEX"] };
-  return { text: "70岁及以上：从力量、体质、敏捷里随机合计 -40，外貌 -20，移动力 -4；可进行 4 次教育进步检定。", physical: 40, app: 20, edu: 0, eduChecks: 4, targets: ["attrSTR", "attrCON", "attrDEX"] };
+  if (age === null) return { text: "请先在基础信息页填写年龄。", physical: 0, app: 0, edu: 0, eduChecks: 0, movePenalty: 0, targets: [] };
+  if (age < 15) return { text: "年龄低于常规调查员范围，请与 KP 确认是否使用年龄补正。", physical: 0, app: 0, edu: 0, eduChecks: 0, movePenalty: 0, targets: [] };
+  if (age <= 19) return { text: "15-19岁：从力量和体型里随机合计 -5，教育 -5。幸运取高暂不自动处理。", physical: 5, app: 0, edu: 5, eduChecks: 0, movePenalty: 0, targets: ["attrSTR", "attrSIZ"] };
+  if (age <= 39) return { text: "20-39岁：可进行 1 次教育进步检定。", physical: 0, app: 0, edu: 0, eduChecks: 1, movePenalty: 0, targets: [] };
+  if (age <= 49) return { text: "40-49岁：从力量、体质、敏捷里随机合计 -5，外貌 -5，移动力 -1；可进行 2 次教育进步检定。", physical: 5, app: 5, edu: 0, eduChecks: 2, movePenalty: 1, targets: ["attrSTR", "attrCON", "attrDEX"] };
+  if (age <= 59) return { text: "50-59岁：从力量、体质、敏捷里随机合计 -10，外貌 -10，移动力 -2；可进行 3 次教育进步检定。", physical: 10, app: 10, edu: 0, eduChecks: 3, movePenalty: 2, targets: ["attrSTR", "attrCON", "attrDEX"] };
+  if (age <= 69) return { text: "60-69岁：从力量、体质、敏捷里随机合计 -20，外貌 -15，移动力 -3；可进行 4 次教育进步检定。", physical: 20, app: 15, edu: 0, eduChecks: 4, movePenalty: 3, targets: ["attrSTR", "attrCON", "attrDEX"] };
+  return { text: "70岁及以上：从力量、体质、敏捷里随机合计 -40，外貌 -20，移动力 -4；可进行 4 次教育进步检定。", physical: 40, app: 20, edu: 0, eduChecks: 4, movePenalty: 4, targets: ["attrSTR", "attrCON", "attrDEX"] };
+}
+
+function renderAgeAdjustmentBadges() {
+  attributes.forEach((attribute) => {
+    const badge = $(attribute.id + "AgeAdjustment");
+    if (!badge) return;
+    const delta = Number(ageAdjustmentState && ageAdjustmentState.applied && ageAdjustmentState.adjustments ? ageAdjustmentState.adjustments[attribute.id] || 0 : 0);
+    badge.textContent = delta ? `${delta > 0 ? "+" : ""}${delta}` : "";
+    badge.hidden = !delta;
+  });
 }
 
 function updateAgeAdjustmentInfo() {
   const rule = getAgeAdjustmentRule();
   const el = $("ageAdjustmentRule");
   if (el) el.textContent = rule.text;
+  const applyBtn = $("applyAgeAdjustmentBtn");
+  const cancelBtn = $("cancelAgeAdjustmentBtn");
+  const applied = Boolean(ageAdjustmentState && ageAdjustmentState.applied);
+  if (applyBtn) applyBtn.disabled = applied || getAgeNumber() === null;
+  if (cancelBtn) cancelBtn.disabled = !applied;
+  renderAgeAdjustmentBadges();
 }
 
 function reduceAttributeValue(id, amount) {
@@ -72,30 +93,144 @@ function reduceAttributeValue(id, amount) {
   return deduction;
 }
 
-function reduceRandomAttributes(ids, totalAmount) {
-  let remaining = totalAmount;
-  while (remaining > 0) {
-    const available = ids.filter((id) => parseAttributeValue(id) !== null && parseAttributeValue(id) > 0);
-    if (!available.length) break;
-    const selected = available[Math.floor(Math.random() * available.length)];
-    remaining -= reduceAttributeValue(selected, Math.min(5, remaining));
-  }
-  return totalAmount - remaining;
+function applyAttributeDelta(id, delta) {
+  const el = $(id);
+  const value = parseAttributeValue(id);
+  if (!el || value === null || !delta) return 0;
+  const next = Math.max(0, value + delta);
+  const actual = next - value;
+  el.value = String(next);
+  return actual;
 }
 
+function addAdjustment(adjustments, id, delta) {
+  if (!delta) return;
+  adjustments[id] = (adjustments[id] || 0) + delta;
+}
+
+function distributeRandomDeductions(ids, totalAmount) {
+  const deltas = {};
+  let remaining = totalAmount;
+  while (remaining > 0 && ids.length) {
+    const selected = ids[Math.floor(Math.random() * ids.length)];
+    const amount = Math.min(5, remaining);
+    deltas[selected] = (deltas[selected] || 0) - amount;
+    remaining -= amount;
+  }
+  return deltas;
+}
+
+function rollD100() {
+  return Math.floor(Math.random() * 100) + 1;
+}
+
+function rollD10() {
+  return Math.floor(Math.random() * 10) + 1;
+}
+
+function getAttributeLabel(id) {
+  const attribute = attributes.find((item) => item.id === id);
+  return attribute ? attribute.name : id;
+}
+
+function setAgeAdjustmentModal(title, lines) {
+  const titleEl = $("ageAdjustmentModalTitle");
+  const body = $("ageAdjustmentResult");
+  if (titleEl) titleEl.textContent = title;
+  if (body) body.innerHTML = `<ul>${lines.map((line) => `<li>${escapeHTML(line)}</li>`).join("")}</ul>`;
+  openModal("ageAdjustmentModal");
+}
 
 function applyAgeAdjustment() {
-  const checkbox = $("ageAdjustmentEnabled");
-  if (!checkbox || checkbox.dataset.applied === "true") return;
+  if (ageAdjustmentState && ageAdjustmentState.applied) return;
   const rule = getAgeAdjustmentRule();
-  const changed = reduceRandomAttributes(rule.targets, rule.physical)
-    + reduceAttributeValue("attrAPP", rule.app)
-    + reduceAttributeValue("attrEDU", rule.edu);
-  checkbox.dataset.applied = "true";
+  const ageText = String($("age") ? $("age").value : "").trim();
+  if (!ageText || getAgeNumber() === null) {
+    showStatus("attributeStatus", "请先在基础信息页填写年龄。", true);
+    return;
+  }
+
+  const requiredIds = Array.from(new Set([...rule.targets, rule.app ? "attrAPP" : "", rule.edu ? "attrEDU" : "", rule.eduChecks ? "attrEDU" : ""].filter(Boolean)));
+  const missing = requiredIds.filter((id) => parseAttributeValue(id) === null).map(getAttributeLabel);
+  if (missing.length) {
+    showStatus("attributeStatus", `请先填写这些属性：${missing.join("、")}。`, true);
+    return;
+  }
+
+  let adjustments = ageAdjustmentState && ageAdjustmentState.age === ageText && ageAdjustmentState.adjustments
+    ? { ...ageAdjustmentState.adjustments }
+    : null;
+  let messages = ageAdjustmentState && ageAdjustmentState.age === ageText && Array.isArray(ageAdjustmentState.messages) && ageAdjustmentState.messages.length
+    ? ageAdjustmentState.messages.slice()
+    : null;
+  let movePenalty = ageAdjustmentState && ageAdjustmentState.age === ageText ? Number(ageAdjustmentState.movePenalty || 0) : rule.movePenalty || 0;
+
+  if (!adjustments || !messages) {
+    const planned = distributeRandomDeductions(rule.targets, rule.physical);
+    if (rule.app) planned.attrAPP = (planned.attrAPP || 0) - rule.app;
+    if (rule.edu) planned.attrEDU = (planned.attrEDU || 0) - rule.edu;
+
+    adjustments = {};
+    messages = [];
+    Object.entries(planned).forEach(([id, delta]) => {
+      const actual = applyAttributeDelta(id, delta);
+      addAdjustment(adjustments, id, actual);
+      if (actual) messages.push(`${getAttributeLabel(id)} ${actual}`);
+    });
+
+    for (let i = 0; i < rule.eduChecks; i += 1) {
+      const eduValue = parseAttributeValue("attrEDU");
+      const checkRoll = rollD100();
+      if (eduValue !== null && checkRoll <= eduValue) {
+        const gain = rollD10();
+        const actual = applyAttributeDelta("attrEDU", gain);
+        addAdjustment(adjustments, "attrEDU", actual);
+        messages.push(`教育进步检定 ${i + 1}：D100=${checkRoll} <= 教育${eduValue}，成功，教育 +${actual}`);
+      } else {
+        messages.push(`教育进步检定 ${i + 1}：D100=${checkRoll} > 教育${eduValue}，未成功，教育不增加`);
+      }
+    }
+
+    if (movePenalty) messages.push(`移动力 -${movePenalty}`);
+    if (!messages.length) messages.push("当前年龄没有可自动应用的年龄补正。");
+  } else {
+    Object.entries(adjustments).forEach(([id, delta]) => applyAttributeDelta(id, Number(delta)));
+  }
+
+  ageAdjustmentState = { applied: true, age: ageText, adjustments, movePenalty, messages };
   updateAttributeCalculations();
   updateSkillCalculations();
   updateAgeAdjustmentInfo();
-  showStatus("attributeStatus", changed ? "已按当前年龄扣减属性。教育进步和幸运请稍后手动处理。" : "当前年龄没有可自动扣减的属性。教育进步暂不处理。");
+  persist();
+  setAgeAdjustmentModal("已使用年龄补正", messages);
+}
+
+function revertAgeAdjustmentValues() {
+  const messages = [];
+  Object.entries(ageAdjustmentState && ageAdjustmentState.adjustments || {}).forEach(([id, delta]) => {
+    const actual = applyAttributeDelta(id, -Number(delta));
+    if (actual) messages.push(`${getAttributeLabel(id)} ${actual > 0 ? "+" : ""}${actual}`);
+  });
+  ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
+  updateAttributeCalculations();
+  updateSkillCalculations();
+  updateAgeAdjustmentInfo();
+  persist();
+  return messages;
+}
+
+function handleAgeChangedAfterAdjustment() {
+  if (!ageAdjustmentState || !ageAdjustmentState.applied) {
+    resetAgeAdjustmentState();
+    return;
+  }
+  revertAgeAdjustmentValues();
+}
+
+function cancelAgeAdjustment() {
+  if (!ageAdjustmentState || !ageAdjustmentState.applied) return;
+  const messages = revertAgeAdjustmentValues();
+  setAgeAdjustmentModal("已取消年龄补正", messages.length ? messages : ["已取消年龄补正。"]);
 }
 function calculateDamageBonusAndBuild(str, siz) {
   if (str === null || siz === null) return { damageBonus: null, build: null };
@@ -121,12 +256,9 @@ function calculateDamageBonusAndBuild(str, siz) {
   return { damageBonus, build };
 }
 
-function calculateMoveSpeed(str, dex, siz) {
-  if (str === null || dex === null || siz === null) return null;
-  let base = 8;
-  if (str > siz && dex > siz) base = 9;
-  else if (str < siz && dex < siz) base = 7;
-  return base - getAgeMovePenalty();
+function calculateMoveSpeed() {
+  const penalty = getAgeMovePenalty();
+  return penalty ? Math.max(0, 8 - penalty) : 8;
 }
 
 function calculateSecondaryAttributes() {
@@ -138,15 +270,25 @@ function calculateSecondaryAttributes() {
   const dbBuild = calculateDamageBonusAndBuild(str, siz);
 
   return [
-    { label: "耐久值 HP", value: con === null || siz === null ? null : Math.floor((con + siz) / 10) },
-    { label: "理智值 SAN", value: pow === null ? null : pow },
-    { label: "魔法值 MP", value: pow === null ? null : Math.floor(pow / 5) },
-    { label: "伤害加值 DB", value: dbBuild.damageBonus },
-    { label: "体格 Build", value: dbBuild.build },
-    { label: "移动速度 MOV", value: calculateMoveSpeed(str, dex, siz) }
+    { key: "hp", label: "耐久值 HP", value: con === null || siz === null ? null : Math.floor((con + siz) / 10) },
+    { key: "san", label: "理智值 SAN", value: pow === null ? null : pow },
+    { key: "mp", label: "魔法值 MP", value: pow === null ? null : Math.floor(pow / 5) },
+    { key: "db", label: "伤害加值 DB", value: dbBuild.damageBonus },
+    { key: "build", label: "体格 Build", value: dbBuild.build },
+    { key: "mov", label: "移动速度 MOV", value: calculateMoveSpeed(str, dex, siz) }
   ];
 }
 
+function renderSecondaryAttributePanel() {
+  const list = $("secondaryAttributeList");
+  if (!list) return;
+  list.innerHTML = calculateSecondaryAttributes().map((item) => {
+    const info = secondaryAttributeNotes[item.key]
+      ? `<span class="info-dot secondary-info-trigger" data-info-note data-info-type="secondary" data-info-key="${item.key}" aria-label="次要属性说明">i</span>`
+      : "";
+    return `<div class="secondary-attribute-item"><span>${item.label}${info}</span><strong>${formatDerivedValue(item.value)}</strong></div>`;
+  }).join("");
+}
 function updateAttributeCalculations() {
   const includeLuck = $("includeLuckInTotal").checked;
   const total = attributes.reduce((sum, attribute) => {
@@ -155,6 +297,7 @@ function updateAttributeCalculations() {
     return value === null ? sum : sum + value;
   }, 0);
   $("usedPoints").textContent = total;
+  renderSecondaryAttributePanel();
   updateAgeAdjustmentInfo();
   markPreviewDirty("attributes");
   markPreviewDirty("secondary");
@@ -278,12 +421,9 @@ function initAttributes() {
     persist();
   });
 
-  $("ageAdjustmentEnabled").addEventListener("change", () => {
-    if ($("ageAdjustmentEnabled").checked) applyAgeAdjustment();
-    updateAttributeCalculations();
-    persist();
-    if (!$("ageAdjustmentEnabled").checked) showStatus("attributeStatus", "已取消年龄补正标记。已扣减的属性不会自动还原。");
-  });
+  $("applyAgeAdjustmentBtn").addEventListener("click", applyAgeAdjustment);
+
+  $("cancelAgeAdjustmentBtn").addEventListener("click", cancelAgeAdjustment);
 
   attributeFieldIds.forEach((id) => {
     $(id).addEventListener("input", () => {
@@ -299,8 +439,7 @@ function initAttributes() {
       $(id).value = "";
     });
     $("includeLuckInTotal").checked = false;
-    $("ageAdjustmentEnabled").checked = false;
-    $("ageAdjustmentEnabled").dataset.applied = "";
+    ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
     rollHistoryData = [];
     renderRollHistory();
     updateAttributeCalculations();
@@ -310,5 +449,18 @@ function initAttributes() {
     showStatus("attributeStatus", "已清空本页内容。");
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
