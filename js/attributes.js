@@ -3,13 +3,16 @@
   sheet.innerHTML = attributes.map((attribute) => `
     <section class="attribute-cell${attribute.isLuck ? " luck-cell" : ""}">
       <div class="attr-main">
-        <div class="attr-name">
-          <strong>${attribute.name}</strong>
-          <span>${attribute.key}</span>
-          <span class="info-dot attr-info-trigger" data-info-note data-info-type="attribute" data-info-key="${attribute.id}" aria-label="属性说明">i</span>
+        <div class="attr-title">
+          <div class="attr-name">
+            <strong>${attribute.name}</strong>
+            <span>${attribute.key}</span>
+            <span class="info-dot attr-info-trigger" data-info-note data-info-type="attribute" data-info-key="${attribute.id}" aria-label="属性说明">i</span>
+          </div>
+          <p class="attr-level-note" id="${attribute.id}LevelNote"></p>
         </div>
         <div class="attr-value-wrap">
-                    <span class="age-adjustment-badge" id="${attribute.id}AgeAdjustment" hidden></span>
+          <span class="age-adjustment-badge" id="${attribute.id}AgeAdjustment" hidden></span>
           ${attribute.isLuck ? `<button class="random-luck-btn secondary" type="button" id="randomLuckBtn">随机生成</button>` : ""}
           <input class="attr-input" id="${attribute.id}" type="text" inputmode="numeric" autocomplete="off" />
         </div>
@@ -17,7 +20,6 @@
     </section>
   `).join("");
 }
-
 function parseAttributeValue(id) {
   const raw = $(id).value.trim();
   if (!raw) return null;
@@ -32,6 +34,25 @@ function formatAttributeValue(id) {
 
 function formatDerivedValue(value) {
   return value === null || value === undefined || value === "" ? "未计算" : String(value);
+}
+
+function getAttributeLevelNote(attribute) {
+  const value = parseAttributeValue(attribute.id);
+  if (value === null || value === 0) return "";
+  const rules = attributeLevelNoteRules[attribute.id] || [];
+  const matched = rules.find((rule) => {
+    if (rule.lt !== undefined) return value < rule.lt;
+    return value <= rule.max;
+  });
+  return matched ? matched.text : "";
+}
+
+function renderAttributeLevelNotes() {
+  attributes.forEach((attribute) => {
+    const el = $(attribute.id + "LevelNote");
+    if (!el) return;
+    el.textContent = getAttributeLevelNote(attribute);
+  });
 }
 
 function getAgeMovePenalty() {
@@ -297,6 +318,7 @@ function updateAttributeCalculations() {
     return value === null ? sum : sum + value;
   }, 0);
   $("usedPoints").textContent = total;
+  renderAttributeLevelNotes();
   renderSecondaryAttributePanel();
   updateAgeAdjustmentInfo();
   markPreviewDirty("attributes");
@@ -449,6 +471,10 @@ function initAttributes() {
     showStatus("attributeStatus", "已清空本页内容。");
   });
 }
+
+
+
+
 
 
 

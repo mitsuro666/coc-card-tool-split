@@ -1,4 +1,4 @@
-function renderStepNav() {
+﻿function renderStepNav() {
   const nav = $("progressPill");
   if (!nav) return;
   nav.innerHTML = stepDefinitions.map((step, index) => {
@@ -80,11 +80,11 @@ function initRouter() {
   $("nextBtn").addEventListener("click", () => {
     const missing = [];
     if (!$("investigatorName").value.trim()) missing.push("姓名");
+    if (!$("age").value.trim()) missing.push("年龄");
     if (!$("occupation").value.trim()) missing.push("职业");
-    if (!era.value || (era.value === "自定义" && !customEra.value.trim())) missing.push("时代");
 
     if (missing.length) {
-      showStatus("saveStatus", `还缺：${missing.join("、")}。`, true);
+      showStatus("saveStatus", `未填写${missing.join("、")}`, true);
       return;
     }
 

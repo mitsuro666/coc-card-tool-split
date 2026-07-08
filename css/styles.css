@@ -603,9 +603,13 @@
       align-items: center;
     }
 
+    .attr-title {
+      min-width: 0;
+    }
+
     .attr-name {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 7px;
       min-width: 0;
     }
@@ -624,6 +628,13 @@
       font-weight: 900;
       letter-spacing: .08em;
       white-space: nowrap;
+    }
+
+    .attr-level-note {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
     }
     #attributePage .attr-value-wrap {
       display: flex;
@@ -2443,10 +2454,11 @@
 }
 
 #attributePage .secondary-attribute-head p {
-  margin: 6px 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
+  text-align: right;
 }
 .floating-preview .preview-list .info-dot {
   margin-left: 5px;
@@ -2461,6 +2473,10 @@
 }
 
 #attributePage .secondary-attribute-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--line);
   background: #fff;
@@ -2539,3 +2555,92 @@
 }
 
 
+
+
+#attributePage .roll-panel-head strong,
+#attributePage .age-adjustment-head h3,
+#attributePage .secondary-attribute-head h3 {
+  font-size: 15px;
+  letter-spacing: .04em;
+}
+
+#attributePage .roll-actions button,
+#attributePage .roll-item-actions button,
+#attributePage .age-adjustment-actions button {
+  min-height: 34px;
+  padding: 7px 11px;
+  border-radius: 12px;
+  font-size: 13px;
+}
+
+#attributePage .secondary-attribute-head {
+  justify-content: flex-start;
+}
+
+#attributePage .secondary-attribute-head p {
+  text-align: left;
+}
+
+#attributePage .used-points-inline strong {
+  font-size: 15px;
+  letter-spacing: 0;
+}
+
+
+#attributePage .roll-panel-head,
+#attributePage .age-adjustment-head,
+#attributePage .secondary-attribute-head {
+  box-sizing: border-box;
+  min-height: 62px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+#attributePage .roll-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#attributePage .roll-text {
+  flex: 1 1 auto;
+}
+
+#attributePage .roll-item-actions {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+  #attributePage .roll-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  #attributePage .roll-item-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+#profilePage .required-mark {
+  margin-left: 3px;
+  color: var(--danger);
+  font-weight: 900;
+}
+
+.floating-preview .preview-skill-name-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.floating-preview .preview-skill-name-line > span {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.floating-preview .preview-skill-item .skill-tags {
+  flex: 0 0 auto;
+}

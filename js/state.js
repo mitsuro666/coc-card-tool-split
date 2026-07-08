@@ -34,6 +34,77 @@
     ];
 
 
+    const attributeLevelNoteRules = {
+      attrSTR: [
+        { max: 15, text: "虚弱，孱弱" },
+        { max: 40, text: "力量弱小" },
+        { max: 60, text: "有正常人的力量" },
+        { max: 80, text: "超乎常人的力量" },
+        { lt: 100, text: "超乎超乎常人的力量" }
+      ],
+      attrDEX: [
+        { max: 20, text: "很不灵活" },
+        { max: 40, text: "不是很灵活" },
+        { max: 60, text: "普通人水平" },
+        { max: 80, text: "是一位运动健将" },
+        { lt: 100, text: "高速而灵活，可以达成超凡的技艺" }
+      ],
+      attrPOW: [
+        { max: 20, text: "尔不过玩物" },
+        { max: 40, text: "痴愚盲目" },
+        { max: 60, text: "如常人一般会有一定自制力" },
+        { max: 80, text: "我心如铁，心坚石穿" },
+        { lt: 100, text: "泰山崩于面而色不变" },
+        { lt: 140, text: "钢铁之心，还能看见鬼" },
+        { max: Infinity, text: "你怕是个假人吧" }
+      ],
+      attrCON: [
+        { max: 20, text: "常年患病在身" },
+        { max: 40, text: "体弱多病" },
+        { max: 60, text: "不会生什么大毛病" },
+        { max: 80, text: "健硕，浑身湿透也不会感冒" },
+        { lt: 100, text: "身体素质极好，精神抖擞" }
+      ],
+      attrAPP: [
+        { max: 20, text: "用脸就能恐惧敌人。。或队友" },
+        { max: 40, text: "有些难看" },
+        { max: 60, text: "人群之中谁也不会看你一眼之后就忘不掉你容颜" },
+        { max: 80, text: "五官端正，仪表堂堂" },
+        { lt: 100, text: "沉鱼落雁，闭月羞花" }
+      ],
+      attrEDU: [
+        { max: 20, text: "目不识丁" },
+        { max: 40, text: "小学毕业" },
+        { max: 60, text: "高中毕业" },
+        { max: 80, text: "是重点大学的学生，或是普通大学的研究生" },
+        { lt: 100, text: "饱读诗书，满腹经纶" }
+      ],
+      attrSIZ: [
+        { max: 20, text: "儿童，身短体瘦" },
+        { max: 40, text: "乙女身材" },
+        { max: 60, text: "普遍身高155-175" },
+        { max: 80, text: "不是高就是胖" },
+        { max: 100, text: "大号的人" },
+        { lt: 150, text: "听说你正在申请身高世界记录？" },
+        { lt: 180, text: "你可能是一头牛" },
+        { lt: 200, text: "你已经是历史上最重的人类了" },
+        { max: Infinity, text: "过分了喂！" }
+      ],
+      attrINT: [
+        { max: 20, text: "脑子是个好东西，可惜。。。" },
+        { max: 40, text: "理解知识要耗费比普通人更多的时间" },
+        { max: 60, text: "有着普通人的灵光一现" },
+        { max: 80, text: "可以自主进行发明创造" },
+        { lt: 100, text: "天才级水平" }
+      ],
+      attrLuck: [
+        { max: 20, text: "克夫克妻" },
+        { max: 40, text: "霉运连连" },
+        { max: 60, text: "命格平庸" },
+        { max: 80, text: "在马路边捡到100块" },
+        { lt: 100, text: "被幸运女神所眷顾" }
+      ]
+    };
     const attributeNotes = {
       attrSTR: "衡量了你的调查员能发挥出的纯粹的身体力量，影响伤害加值和体格。",
       attrCON: "用于衡量你的调查员的健康与强韧程度。",
@@ -192,5 +263,8 @@ let ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty
     function escapeHTML(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
     }
+
+
+
 
 

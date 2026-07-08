@@ -133,10 +133,12 @@ function renderSkillPreview() {
   list.innerHTML = visible.map((skill) => `
     <div class="preview-skill-item">
       <div class="preview-skill-main">
-        <span>${escapeHTML(getSkillDisplayName(skill) || skill.name)}</span>
+        <div class="preview-skill-name-line">
+          <span>${escapeHTML(getSkillDisplayName(skill) || skill.name)}</span>
+          <div class="skill-tags">${renderPreviewSkillTags(skill)}</div>
+        </div>
         <strong>${getSkillTotal(skill)}</strong>
       </div>
-      <div class="skill-tags">${renderPreviewSkillTags(skill)}</div>
     </div>
   `).join("");
   previewDirty.skills = false;
@@ -172,4 +174,5 @@ function initPreview() {
     });
   });
 }
+
 
