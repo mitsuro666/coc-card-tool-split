@@ -2191,3 +2191,127 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* scoped refinements: header step row and profile current-time inputs */
+.topbar {
+  align-items: stretch;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title-block {
+  width: 100%;
+}
+
+.progress-pill.step-nav {
+  width: 100%;
+  max-width: none;
+  justify-content: flex-start;
+  gap: 8px;
+  border-radius: 18px;
+  padding: 10px 12px;
+}
+
+.step-link {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.step-link.active {
+  border-color: #8fb0cf;
+  background: #cfe0f1;
+  color: #183153;
+}
+
+.step-number {
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+}
+
+.step-name {
+  display: inline;
+}
+
+#profilePage .current-time-inputs {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(4, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+#profilePage .current-time-inputs label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  width: 100%;
+}
+
+#profilePage .current-time-inputs input,
+#profilePage #currentYear {
+  width: 100%;
+}
+
+@media (max-width: 560px) {
+  #profilePage .current-time-inputs {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* scoped refinements: step distribution, toolbar layer, luck input alignment */
+.progress-pill.step-nav {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: center;
+  gap: 4px;
+}
+
+.step-link {
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+
+.toolbar {
+  z-index: 50;
+}
+
+#attributePage .luck-cell .attr-input {
+  text-align: center;
+}
+
+@media (max-width: 720px) {
+  .progress-pill.step-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* scoped layer fix: profile page toolbar below overlays, above normal fields */
+#profilePage .profession-wrap {
+  z-index: auto;
+}
+
+#profilePage .toolbar {
+  z-index: 100;
+}
+
+#profilePage .profession-results {
+  z-index: 1200;
+}
+
+.floating-panel {
+  z-index: 1000;
+}
+
+.modal-backdrop {
+  z-index: 1300;
+}
+
+/* profession suggestions should float above the profile form and toolbar */
+#profilePage .profession-results {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  z-index: 1200;
+  max-height: none;
+}

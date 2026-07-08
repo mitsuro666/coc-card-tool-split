@@ -1,4 +1,4 @@
-let pendingProfessionMatch = null;
+﻿let pendingProfessionMatch = null;
 
 function setOccupationHint(text) {
   occupationHint.textContent = text || "";
@@ -87,6 +87,17 @@ function applyProfession(profession) {
   persist();
 }
 
+function positionProfessionResults() {
+  if (!professionResults.classList.contains("show")) return;
+  const rect = occupation.getBoundingClientRect();
+  const margin = 8;
+  const left = Math.max(12, rect.left);
+  const width = Math.min(rect.width, window.innerWidth - left - 12);
+  professionResults.style.left = `${left}px`;
+  professionResults.style.top = `${rect.bottom + margin}px`;
+  professionResults.style.width = `${width}px`;
+  professionResults.style.maxHeight = `${Math.max(180, window.innerHeight - rect.bottom - 96)}px`;
+}
 function showProfessionMatches(keyword) {
   const text = keyword.trim().toLowerCase();
   if (!text) {
@@ -96,7 +107,7 @@ function showProfessionMatches(keyword) {
     return;
   }
 
-  const matches = findProfessionMatches(keyword).slice(0, 6);
+  const matches = findProfessionMatches(keyword);
 
   if (!matches.length) {
     professionResults.innerHTML = `<div class="profession-option"><div class="profession-name">没有匹配结果</div><div class="profession-meta">可以手动填写。</div></div>`;
@@ -133,10 +144,13 @@ function initProfile() {
   professionResults.addEventListener("click", (event) => {
     const option = event.target.closest(".profession-option[data-index]");
     if (!option) return;
-    const matches = findProfessionMatches(occupation.value).slice(0, 6);
+    const matches = findProfessionMatches(occupation.value);
     const selected = matches[Number(option.dataset.index)];
     if (selected) applyProfession(selected);
   });
+
+  window.addEventListener("resize", positionProfessionResults);
+  window.addEventListener("scroll", positionProfessionResults, true);
 
   $("autoMatchOccupation").addEventListener("click", autoMatchProfession);
 
@@ -271,3 +285,4 @@ function initProfile() {
     showStatus("saveStatus", "已清空本页内容。");
   });
 }
+
