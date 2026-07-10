@@ -157,6 +157,14 @@
     function getCategorySkillGroup(skill) {
       return matchSkillGroup(skill, skillCategoryGroups);
     }
+    function getCategorySkillGroups(skill) {
+      const groups = [];
+      Object.entries(skillCategoryGroups).forEach(([key, group]) => {
+        const matched = matchSkillGroup(skill, { [key]: group });
+        if (matched) groups.push(matched);
+      });
+      return groups;
+    }
 
     function isCommonSkill(skill) {
       return Boolean(getCommonSkillGroup(skill));
@@ -226,9 +234,12 @@
     function getCategoryOrder(skill) {
       const category = getCategorySkillGroup(skill);
       if (!category) return 9;
-      if (category.key === "action") return 0;
-      if (category.key === "knowledge") return 1;
-      if (category.key === "technique") return 2;
+      if (category.key === "investigate") return 0;
+      if (category.key === "social") return 1;
+      if (category.key === "combat") return 2;
+      if (category.key === "stunt") return 3;
+      if (category.key === "support") return 4;
+      if (category.key === "knowledge") return 5;
       return 8;
     }
 
@@ -247,11 +258,8 @@
       if (tag === "occupation") return 0;
       if (tag === "candidate") return 1;
       if (isCommonSkill(skill)) return 2;
-      const name = getCanonicalSkillName(skill);
-      if (name === "母语") return 3;
-      if (name === "克苏鲁神话") return 4;
       const categoryOrder = getCategoryOrder(skill);
-      if (categoryOrder < 9) return 5 + categoryOrder;
+      if (categoryOrder < 9) return 3 + categoryOrder;
       return 9;
     }
 
@@ -260,11 +268,6 @@
       const rankB = skillDefaultSortRank(b);
       const rankDiff = rankA - rankB;
       if (rankDiff) return rankDiff;
-
-      if (rankA <= 2) {
-        const commonDiff = getCommonOrder(a) - getCommonOrder(b);
-        if (commonDiff) return commonDiff;
-      }
 
       const categoryDiff = getCategoryOrder(a) - getCategoryOrder(b);
       if (categoryDiff) return categoryDiff;
@@ -283,34 +286,66 @@
       });
     }
 
+
+    function getSkillNoteKey(skill) {
+      const name = getCanonicalSkillName(skill);
+      if (name.includes("取悦") || name.includes("魅惑")) return "取悦";
+      if (name.includes("侦察") || name.includes("侦查")) return "侦查";
+      if (name.includes("斗殴")) return "斗殴";
+      if (name.includes("格斗")) return "格斗";
+      if (name.includes("射击")) return "射击";
+      if (name.includes("驾驶") && !name.includes("汽车驾驶")) return "驾驶";
+      if (name.includes("科学")) return "科学";
+      if (name.includes("生存")) return "生存";
+      return name.replace(/：.*$/, "");
+    }
+
+    function renderSkillInfoButton(skill) {
+      const key = getSkillNoteKey(skill);
+      return `<span class="info-dot skill-info-trigger" data-info-note data-info-type="skill" data-info-key="${escapeHTML(key)}" aria-label="技能说明">i</span>`;
+    }
     function renderSkillTags(skill) {
       const tags = [];
       const occupationTag = getOccupationTagType(skill);
       if (occupationTag === "candidate") tags.push(`<span class="skill-tag candidate">可选</span>`);
-      const commonGroup = getCommonSkillGroup(skill);
-      if (commonGroup) tags.push(`<span class="skill-tag ${commonGroup.className}">${commonGroup.label}</span>`);
-      const categoryGroup = getCategorySkillGroup(skill);
-      if (categoryGroup) tags.push(`<span class="skill-tag ${categoryGroup.className}">${categoryGroup.label}</span>`);
+      getCategorySkillGroups(skill).forEach((categoryGroup) => {
+        tags.push(`<span class="skill-tag ${categoryGroup.className}">${categoryGroup.label}</span>`);
+      });
       if (skill.isCustom) tags.push(`<span class="skill-tag custom">自定义</span>`);
       return tags.join("");
     }
 
-    function renderSkillCard(skill) {
+
+    function normalizeTalentSkillIds() {
+      const validIds = new Set(getAllSkills().filter((skill) => !getOccupationTagType(skill)).map((skill) => String(skill.id)));
+      talentSkillIds = talentSkillIds.filter((id, index) => validIds.has(String(id)) && talentSkillIds.indexOf(id) === index);
+    }
+
+    function isTalentSkill(skill) {
+      return talentSkillIds.includes(String(skill.id));
+    }
+
+    function updateTalentSkillSummary() {
+      const el = $("talentSkillSummary");
+      if (el) el.textContent = String(talentSkillIds.length);
+    }
+    function renderSkillCard(skill, isOccupationSection = false) {
       const state = getSkillState(skill.id);
       const occupationTag = getOccupationTagType(skill);
+      const talent = isTalentSkill(skill);
       const base = computeSkillBase(skill);
       const total = getSkillTotal(skill);
-      const highlighted = occupationTag || isCommonSkill(skill) || isAddedSkill(skill);
+      const highlighted = occupationTag || talent || isCommonSkill(skill) || isAddedSkill(skill);
+      const talentToggle = isOccupationSection ? `` : `<label class="skill-occ-toggle skill-talent-toggle"><input class="skill-talent-checkbox" type="checkbox" ${talent ? "checked" : ""} /> 特长</label>`;
       const customDeleteButton = skill.isCustom ? `<button class="skill-delete-btn" type="button" data-delete-custom-skill="${skill.id}">删除</button>` : ``;
       return `
-          <section class="skill-row${highlighted ? " is-highlighted" : ""}" data-skill-id="${skill.id}">
-            <label class="skill-occ-toggle">
-              <input class="skill-occ-checkbox" type="checkbox" ${occupationTag ? "checked" : ""} /> 本职
-            </label>
+          <section class="skill-row${highlighted ? " is-highlighted" : ""}${talent ? " is-talent" : ""}" data-skill-id="${skill.id}">
+            ${talentToggle}
             <div class="skill-title">
               <div class="skill-title-head">
                 <div class="skill-name-line">
                   <strong data-skill-name>${escapeHTML(getSkillDisplayName(skill) || skill.name)}</strong>
+                  ${renderSkillInfoButton(skill)}
                   <div class="skill-tags">${renderSkillTags(skill)}</div>
                 </div>
               </div>
@@ -332,11 +367,11 @@
 
     function renderSkillSection(title, skills) {
       const body = skills.length
-        ? `<div class="skill-section-list">${skills.map(renderSkillCard).join("")}</div>`
+        ? `<div class="skill-section-list">${skills.map((skill) => renderSkillCard(skill, title === "本职技能")).join("")}</div>`
         : `<div class="skill-section-empty">暂无符合条件的技能。</div>`;
       return `
         <details class="skill-section" open>
-          <summary><span>${title}</span><strong>${skills.length}</strong></summary>
+          <summary><span>${title}<strong>${skills.length}</strong></span><i aria-hidden="true"></i></summary>
           ${body}
         </details>
       `;
@@ -346,6 +381,7 @@
       const list = $("skillList");
       if (!list) return;
       const search = normalizeSearchText($("skillSearch") ? $("skillSearch").value : "");
+      normalizeTalentSkillIds();
       const visible = sortSkills(getAllSkills().filter((skill) => {
         if (!skillMatchesFilter(skill)) return false;
         if (!search) return true;
@@ -363,7 +399,10 @@
       });
       list.innerHTML = sections.map((section) => renderSkillSection(section.title, section.skills)).join("");
       updateSkillSummary();
-    }    function updateSkillRow(skillId) {
+      updateTalentSkillSummary();
+      renderSkillRadar();
+    }
+    function updateSkillRow(skillId) {
       const skill = getAllSkills().find((item) => item.id === skillId);
       const row = document.querySelector(`.skill-row[data-skill-id="${skillId}"]`);
       if (!skill || !row) return;
@@ -428,7 +467,10 @@
       const occupation = findSelectedOccupation();
       fillDefaultCreditRating(false);
       const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
-      const careerUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).career), 0) + creditUsed;
+      const careerUsed = getAllSkills().reduce((sum, skill) => {
+        if (!getOccupationTagType(skill) && !isTalentSkill(skill)) return sum;
+        return sum + parsePointValue(getSkillState(skill.id).career);
+      }, 0) + creditUsed;
       const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0);
       const careerTarget = occupation ? evaluateOccupationPointFormula(occupation.skillPointFormulaExcel) : null;
       const interestTarget = (parseAttributeValue("attrINT") || 0) * 2;
@@ -446,14 +488,134 @@
     function updateSkillCalculations() {
       getAllSkills().forEach((skill) => updateSkillRow(skill.id));
       updateSkillSummary();
+      renderSkillRadar();
       updateAssetCalculations();
     }
 
+
+    function skillMatchesRadarPart(skill, part) {
+      const name = getCanonicalSkillName(skill);
+      if (part === "驾驶") return name.startsWith("驾驶") && !name.includes("汽车驾驶");
+      if (part === "射击") return name.includes("射击");
+      if (part === "格斗") return name.includes("格斗");
+      if (part === "技艺") return name.includes("技艺");
+      if (part === "科学") return name.includes("科学");
+      if (part === "外语") return name.includes("外语");
+      return name.includes(part);
+    }
+
+    function skillValueByName(part) {
+      return getAllSkills().reduce((sum, skill) => {
+        return skillMatchesRadarPart(skill, part) ? sum + getSkillTotal(skill) : sum;
+      }, 0);
+    }
+
+    function skillValueByParts(parts) {
+      return parts.reduce((sum, part) => sum + skillValueByName(part), 0);
+    }
+
+    function calculateSkillRadarValues() {
+      const attrs = getAttributeMap();
+      const credit = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
+      const motherTongueBase = attrs.EDU || 0;
+      const dodgeBase = Math.floor((attrs.DEX || 0) / 2);
+      const groups = [
+        {
+          label: "调查",
+          value: (attrs.INT || 0) + skillValueByParts(["会计", "人类学", "估价", "考古学", "计算机使用", "克苏鲁神话", "外语", "图书馆使用", "聆听", "博物学", "神秘学", "精神分析", "心理学", "侦查", "追踪", "读唇"]) - 122
+        },
+        {
+          label: "交涉",
+          value: (attrs.APP || 0) + credit + skillValueByParts(["人类学", "估价", "取悦", "乔装", "话术", "恐吓", "外语", "母语", "法律", "说服", "精神分析", "心理学", "侦查", "追踪", "读唇"]) - 111 - motherTongueBase
+        },
+        {
+          label: "战斗",
+          value: ((attrs.STR || 0) + (attrs.SIZ || 0)) / 2 + (attrs.CON || 0) + (attrs.DEX || 0) + skillValueByParts(["闪避", "格斗", "射击", "恐吓", "跳跃", "聆听", "操作重型机械", "心理学", "骑术", "侦查", "潜行", "投掷", "动物驯养", "爆破", "催眠", "炮术"]) - 189 - dodgeBase
+        },
+        {
+          label: "特技",
+          value: (attrs.DEX || 0) + skillValueByParts(["考古学", "技艺", "攀爬", "乔装", "汽车驾驶", "电气维修", "跳跃", "锁匠", "机械维修", "医学", "导航", "操作重型机械", "驾驶", "骑术", "妙手", "潜行", "生存", "游泳", "投掷", "追踪", "动物驯养", "潜水", "爆破", "催眠", "炮术"]) - 219
+        },
+        {
+          label: "支援",
+          value: credit + skillValueByParts(["急救", "医学", "精神分析", "汽车驾驶", "驾驶", "骑术", "导航", "人类学", "动物驯养", "催眠", "炮术"]) - 76
+        },
+        {
+          label: "学问",
+          value: (attrs.EDU || 0) + (attrs.INT || 0) + skillValueByParts(["会计", "人类学", "计算机使用", "克苏鲁神话", "电子学", "历史", "外语", "母语", "法律", "图书馆使用", "医学", "博物学", "神秘学", "精神分析", "心理学", "科学", "读唇"]) - motherTongueBase - 76
+        }
+      ];
+      groups.forEach((group) => { group.value = Math.max(0, group.value); });
+      const total = groups.reduce((sum, group) => sum + group.value, 0);
+      return groups.map((group) => ({ ...group, ratio: total > 0 ? group.value / total : 0 }));
+    }
+
+    function renderSkillRadar() {
+      const panel = $("skillRadarPanel");
+      const canvas = $("skillRadarCanvas");
+      if (!panel || !canvas || !panel.open) return;
+      const cssWidth = Math.max(280, Math.round(canvas.getBoundingClientRect().width || 360));
+      const cssHeight = Math.max(240, Math.round(canvas.getBoundingClientRect().height || 280));
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(cssWidth * ratio);
+      canvas.height = Math.round(cssHeight * ratio);
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, cssWidth, cssHeight);
+      const items = calculateSkillRadarValues();
+      const cx = cssWidth / 2;
+      const cy = cssHeight / 2 + 8;
+      const radius = Math.min(cssWidth, cssHeight) * 0.28;
+      const angleStep = Math.PI * 2 / items.length;
+      const pointAt = (index, valueRadius) => {
+        const angle = -Math.PI / 2 + index * angleStep;
+        return { x: cx + Math.cos(angle) * valueRadius, y: cy + Math.sin(angle) * valueRadius };
+      };
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#d6e0ea";
+      for (let step = 1; step <= 5; step += 1) {
+        ctx.beginPath();
+        items.forEach((_, index) => {
+          const point = pointAt(index, radius * step / 5);
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.closePath();
+        ctx.stroke();
+      }
+      items.forEach((item, index) => {
+        const axis = pointAt(index, radius);
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(axis.x, axis.y);
+        ctx.stroke();
+        const label = pointAt(index, radius + 30);
+        ctx.fillStyle = "#3f4d5c";
+        ctx.font = "12px Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(item.label, label.x, label.y);
+      });
+      if (!items.some((item) => item.ratio > 0)) return;
+      ctx.beginPath();
+      items.forEach((item, index) => {
+        const point = pointAt(index, radius * item.ratio);
+        if (index === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = "rgba(80, 145, 199, .72)";
+      ctx.strokeStyle = "#2f6fa7";
+      ctx.lineWidth = 2;
+      ctx.fill();
+      ctx.stroke();
+    }
 function initSkills() {
   $("resetSkillsBtn").addEventListener("click", () => {
     if (!confirm("确定清空技能加点页的内容吗？")) return;
     skillPointData = {};
     customSkillData = [];
+    talentSkillIds = [];
     if (creditRatingValue) creditRatingValue.value = "";
     renderSkillList();
     persist();
@@ -487,6 +649,7 @@ function initSkills() {
   if (creditRatingValue) {
     creditRatingValue.addEventListener("input", () => {
       updateSkillSummary();
+      renderSkillRadar();
       updateAssetCalculations();
       persist();
     });
@@ -501,6 +664,9 @@ function initSkills() {
     renderSkillList();
     persist();
   });
+
+  const skillRadarPanel = $("skillRadarPanel");
+  if (skillRadarPanel) skillRadarPanel.addEventListener("toggle", () => renderSkillRadar());
 
   document.querySelectorAll("[data-skill-filter]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -521,6 +687,7 @@ function initSkills() {
     if (!skill) return;
     if (!confirm("确定删除自定义技能「" + skill.name + "」吗？")) return;
     customSkillData = customSkillData.filter((item) => item.id !== skillId);
+    talentSkillIds = talentSkillIds.filter((id) => id !== skillId);
     delete skillPointData[skillId];
     renderSkillList();
     persist();
@@ -546,8 +713,11 @@ function initSkills() {
     if (!row) return;
     const skillId = row.dataset.skillId;
     const state = getSkillState(skillId);
-    if (event.target.classList.contains("skill-occ-checkbox")) {
-      state.manualOccupation = event.target.checked;
+    if (event.target.classList.contains("skill-talent-checkbox")) {
+      if (event.target.checked) {if (!talentSkillIds.includes(skillId)) talentSkillIds.push(skillId);
+      } else {
+        talentSkillIds = talentSkillIds.filter((id) => id !== skillId);
+      }
       renderSkillList();
       persist();
     }
@@ -557,6 +727,22 @@ function initSkills() {
     }
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

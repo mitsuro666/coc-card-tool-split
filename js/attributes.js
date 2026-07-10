@@ -574,6 +574,10 @@ function initAttributes() {
 
   attributeFieldIds.forEach((id) => {
     $(id).addEventListener("input", () => {
+      if (id === "attrAPP") {
+        const appValue = Number($(id).value);
+        if (Number.isFinite(appValue) && appValue > 99) $(id).value = "99";
+      }
       updateAttributeCalculations();
       updateSkillCalculations();
       persist();
@@ -596,6 +600,7 @@ function initAttributes() {
     showStatus("attributeStatus", "已清空本页内容。");
   });
 }
+
 
 
 

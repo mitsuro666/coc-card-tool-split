@@ -21,6 +21,7 @@ function collectData() {
     rollHistoryData,
     skills: skillPointData,
     customSkills: customSkillData,
+    talentSkillIds,
     creditRatingValue: creditRatingValue ? creditRatingValue.value : "",
     skillFilter: currentSkillFilter,
     skillSort: $("skillSort") ? $("skillSort").value : "priority",
@@ -86,6 +87,7 @@ function restore() {
       rollHistoryData = Array.isArray(data.rollHistoryData) ? data.rollHistoryData.slice(0, 5) : [];
       skillPointData = data.skills && typeof data.skills === "object" ? data.skills : {};
       customSkillData = Array.isArray(data.customSkills) ? data.customSkills.map(normalizeCustomSkill).filter(Boolean) : [];
+      talentSkillIds = Array.isArray(data.talentSkillIds) ? data.talentSkillIds.map(String) : [];
       if (creditRatingValue && data.creditRatingValue !== undefined) creditRatingValue.value = data.creditRatingValue;
       const savedSkillFilter = data.skillFilter === "specialized" || data.skillFilter === "occupation" || data.skillFilter === "common" ? "all" : (data.skillFilter || "all");
       currentSkillFilter = ["all", "added", "unadded"].includes(savedSkillFilter) ? savedSkillFilter : "all";
@@ -175,6 +177,9 @@ function restore() {
 function initStorage() {
   window.addEventListener("beforeunload", () => flushPersist(true));
 }
+
+
+
 
 
 

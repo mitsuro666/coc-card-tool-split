@@ -3028,3 +3028,424 @@
     grid-template-columns: 1fr;
   }
 }
+
+#skillPage .skill-section {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+#skillPage .skill-section summary {
+  padding: 10px 2px 8px;
+  border-bottom: 0;
+}
+
+#skillPage .skill-section summary span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#skillPage .skill-section summary strong {
+  min-width: 0;
+  padding: 0;
+  border-radius: 0;
+  color: var(--muted);
+  background: transparent;
+  font-size: 13px;
+}
+
+#skillPage .skill-section summary i {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid var(--navy-soft);
+  transition: transform .18s ease;
+}
+
+#skillPage .skill-section:not([open]) summary i {
+  transform: rotate(-90deg);
+}
+
+#skillPage .skill-section-list {
+  padding: 0;
+}
+
+#skillPage .skill-section-empty {
+  padding: 4px 2px 12px;
+}
+
+#skillPage .occupation-info-strip,
+#skillPage .skill-summary-bar,
+#skillPage .skill-tools {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+#skillPage .skill-section {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.72);
+  overflow: hidden;
+}
+
+#skillPage .skill-section summary {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+#skillPage .skill-section-list {
+  padding: 10px;
+}
+
+#skillPage .skill-section-empty {
+  padding: 14px 12px;
+}
+
+#skillPage .occupation-info-strip {
+  grid-template-columns: minmax(120px, .8fr) minmax(210px, 1.2fr) minmax(260px, 1fr);
+  align-items: center;
+  row-gap: 8px;
+}
+
+#skillPage .occupation-info-line {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+
+#skillPage .occupation-info-line span,
+#skillPage .occupation-info-line label {
+  display: inline;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#skillPage .occupation-info-line strong {
+  display: inline;
+  font-size: 13px;
+}
+
+#skillPage .occupation-skills-note {
+  grid-column: 1 / -1;
+}
+
+#skillPage .occupation-skills-note span {
+  margin-bottom: 3px;
+}
+
+#skillPage .skill-credit-control {
+  margin-left: 0;
+  justify-content: flex-end;
+}
+
+#skillPage .skill-credit-control input {
+  width: 88px;
+  min-height: 36px;
+  padding: 7px 8px;
+  text-align: center;
+}
+
+#skillPage .skill-summary-bar {
+  column-gap: 44px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+#skillPage .skill-summary-bar strong {
+  font-size: 18px;
+}
+
+@media (max-width: 760px) {
+  #skillPage .occupation-info-strip {
+    grid-template-columns: 1fr;
+  }
+
+  #skillPage .skill-credit-control {
+    justify-content: flex-start;
+  }
+}
+
+#skillPage .occupation-info-line span,
+#skillPage .occupation-info-line label,
+#skillPage .occupation-skills-note span {
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#skillPage .occupation-info-line strong,
+#skillPage .occupation-skills-note strong,
+#skillPage .occupation-info-line label strong {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#skillPage .occupation-skills-note {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+#skillPage .occupation-skills-note span {
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+#skillPage .occupation-skills-note strong {
+  display: inline;
+}
+
+#skillPage .occupation-info-strip {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 28px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+#skillPage .occupation-info-line {
+  justify-content: flex-start;
+}
+
+#skillPage .occupation-skills-note {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+#skillPage .skill-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  column-gap: 28px;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper-soft);
+}
+
+#skillPage .skill-summary-bar > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+#skillPage .skill-credit-control {
+  margin-left: 0;
+  justify-content: flex-end;
+}
+
+#skillPage .skill-credit-control label {
+  white-space: nowrap;
+}
+
+#skillPage .skill-credit-control input {
+  width: 88px;
+  min-height: 36px;
+  padding: 7px 8px;
+  text-align: center;
+}
+
+#skillPage .skill-tools {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+@media (max-width: 760px) {
+  #skillPage .occupation-info-strip,
+  #skillPage .skill-summary-bar {
+    grid-template-columns: 1fr;
+  }
+
+  #skillPage .skill-credit-control {
+    justify-content: flex-start;
+  }
+}
+
+#skillPage .skill-summary-bar .skill-credit-control,
+#skillPage .skill-summary-bar .skill-credit-control label,
+#skillPage .skill-summary-bar .skill-credit-control strong {
+  font-size: inherit;
+}
+
+#skillPage .skill-tag.category-social {
+  background: #f4eff8;
+  color: #6b4b7f;
+}
+
+#skillPage .skill-tag.category-combat {
+  background: #f8eeee;
+  color: #8a4a4a;
+}
+
+#skillPage .skill-tag.category-investigate {
+  background: #edf4fb;
+  color: #2f5f8f;
+}
+
+#skillPage .skill-tag.category-stunt {
+  background: #eef6f7;
+  color: #3a6d78;
+}
+
+#skillPage .skill-tag.category-support {
+  background: #eef6f2;
+  color: #2e6d4d;
+}
+
+#skillPage .skill-tag.category-knowledge {
+  background: #eef2f8;
+  color: #3f5c83;
+}
+
+#skillPage .skill-name-line {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+#skillPage .skill-name-line .skill-tags {
+  margin-left: 4px;
+}
+
+#skillPage .skill-info-trigger {
+  flex: 0 0 15px;
+}
+
+#skillPage .skill-credit-control .info-dot {
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+#skillPage .skill-name-line .info-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  line-height: 1;
+  text-align: center;
+}
+
+#skillPage .skill-summary-bar {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#skillPage .skill-row.is-talent {
+  background: #fff8dc;
+  border-color: #ead58f;
+}
+
+#skillPage .skill-talent-toggle {
+  color: #80633b;
+}
+
+@media (max-width: 760px) {
+  #skillPage .skill-summary-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+#skillPage .skill-summary-bar {
+  grid-template-columns: auto auto minmax(210px, 1fr) auto;
+  column-gap: 28px;
+}
+
+#skillPage .skill-summary-bar > div {
+  white-space: nowrap;
+}
+
+#skillPage .skill-credit-control {
+  display: grid !important;
+  grid-template-columns: max-content 86px;
+  align-items: center;
+  justify-content: center;
+  column-gap: 10px;
+}
+
+#skillPage .skill-credit-control label {
+  white-space: nowrap;
+}
+
+#skillPage .skill-credit-control input {
+  width: 86px;
+}
+
+@media (max-width: 760px) {
+  #skillPage .skill-summary-bar {
+    grid-template-columns: 1fr;
+  }
+
+  #skillPage .skill-credit-control {
+    justify-content: flex-start;
+  }
+}
+
+#skillPage .skill-radar-panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.72);
+  overflow: hidden;
+}
+
+#skillPage .skill-radar-panel summary {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  color: var(--navy);
+  font-weight: 900;
+  cursor: pointer;
+  list-style: none;
+}
+
+#skillPage .skill-radar-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+#skillPage .skill-radar-panel summary::after {
+  content: "展开";
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#skillPage .skill-radar-panel[open] summary::after {
+  content: "收起";
+}
+
+#skillPage .skill-radar-body {
+  display: flex;
+  justify-content: center;
+  padding: 12px 16px 16px;
+  background: #fff;
+}
+
+#skillPage #skillRadarCanvas {
+  width: min(100%, 420px);
+  height: 300px;
+  display: block;
+}
+
+@media (max-width: 560px) {
+  #skillPage #skillRadarCanvas {
+    height: 260px;
+  }
+}

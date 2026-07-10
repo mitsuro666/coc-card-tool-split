@@ -255,16 +255,16 @@
 
         <div class="skills-board">
           <div class="occupation-info-strip" id="skillOccupationInfo">
-            <div>
+            <div class="occupation-info-line">
               <span>职业</span>
               <strong id="skillOccupationName">未选择</strong>
             </div>
-            <div>
+            <div class="occupation-info-line">
               <span>职业属性</span>
               <strong id="skillOccupationFormula">未读取</strong>
             </div>
             <div class="occupation-skills-note">
-              <span>本职技能说明</span>
+              <span>本职技能</span>
               <strong id="skillOccupationSkillsText">选择职业后显示。</strong>
             </div>
           </div>
@@ -273,10 +273,10 @@
             <div>职业点数：<strong id="careerPointSummary">0 / 未计算</strong></div>
             <div>兴趣点数：<strong id="interestPointSummary">0 / 未计算</strong></div>
             <div class="skill-credit-control">
-              <label for="creditRatingValue">信用评级</label>
+              <label for="creditRatingValue">信用评级范围<span class="info-dot skill-info-trigger" data-info-note data-info-type="skill" data-info-key="信用评级" aria-label="信用评级说明">i</span>：<strong id="creditRangeSummary">未读取</strong></label>
               <input id="creditRatingValue" type="number" inputmode="numeric" min="0" autocomplete="off" />
-              <span class="credit-range-text">范围 <strong id="creditRangeSummary">未读取</strong></span>
             </div>
+            <div>已选择特长数：<strong id="talentSkillSummary">0</strong></div>
           </div>
 
           <div class="skill-tools">
@@ -298,6 +298,12 @@
           </div>
 
           <div class="skill-list" id="skillList"></div>
+          <details class="skill-radar-panel" id="skillRadarPanel">
+            <summary>技能雷达图</summary>
+            <div class="skill-radar-body">
+              <canvas id="skillRadarCanvas" width="360" height="280" aria-label="技能雷达图"></canvas>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -601,6 +607,13 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 
