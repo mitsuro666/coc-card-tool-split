@@ -227,6 +227,13 @@
             </div>
             <div class="secondary-attribute-list" id="secondaryAttributeList"></div>
           </section>
+
+          <details class="attribute-radar-panel" id="attributeRadarPanel">
+            <summary>能力图表</summary>
+            <div class="attribute-radar-body">
+              <canvas id="attributeRadarCanvas" width="360" height="280" aria-label="属性雷达图"></canvas>
+            </div>
+          </details>
         </div>
       </section>
 
@@ -275,16 +282,16 @@
           <div class="skill-tools">
             <select id="skillSort" aria-label="技能排序">
               <option value="priority">默认排序</option>
-              <option value="common">常用优先</option>
-              <option value="added">已加点优先</option>
+              <option value="added-first">已加点优先</option>
+              <option value="unadded-first">未加点优先</option>
               <option value="total-desc">数值从高到低</option>
+              <option value="total-asc">数值从低到高</option>
               <option value="name">名称排序</option>
             </select>
-            <div class="skill-filters" aria-label="技能筛选">
+            <div class="skill-filters" role="group" aria-label="技能筛选">
               <button class="skill-filter-btn active" type="button" data-skill-filter="all">全部</button>
-              <button class="skill-filter-btn" type="button" data-skill-filter="occupation">本职</button>
-              <button class="skill-filter-btn" type="button" data-skill-filter="common">常用</button>
               <button class="skill-filter-btn" type="button" data-skill-filter="added">已加点</button>
+              <button class="skill-filter-btn" type="button" data-skill-filter="unadded">未加点</button>
             </div>
             <input id="skillSearch" type="text" placeholder="搜索技能" autocomplete="off" />
             <button class="skill-add-btn" type="button" id="addCustomSkillBtn">添加自定义技能</button>
@@ -594,6 +601,11 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+
+
+
+
+
 
 
 

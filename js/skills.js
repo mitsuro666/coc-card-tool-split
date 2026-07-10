@@ -211,9 +211,8 @@
     }
 
     function skillMatchesFilter(skill) {
-      if (currentSkillFilter === "occupation") return Boolean(getOccupationTagType(skill));
-      if (currentSkillFilter === "common") return isCommonSkill(skill);
       if (currentSkillFilter === "added") return isAddedSkill(skill);
+      if (currentSkillFilter === "unadded") return !isAddedSkill(skill);
       return true;
     }
 
@@ -275,9 +274,10 @@
     function sortSkills(skills) {
       const sortMode = $("skillSort") ? $("skillSort").value : "priority";
       return [...skills].sort((a, b) => {
-        if (sortMode === "common") return (isCommonSkill(b) - isCommonSkill(a)) || sortByDefaultPriority(a, b);
-        if (sortMode === "added") return (isAddedSkill(b) - isAddedSkill(a)) || sortByDefaultPriority(a, b);
+        if (sortMode === "added" || sortMode === "added-first") return (isAddedSkill(b) - isAddedSkill(a)) || sortByDefaultPriority(a, b);
+        if (sortMode === "unadded-first") return (isAddedSkill(a) - isAddedSkill(b)) || sortByDefaultPriority(a, b);
         if (sortMode === "total-desc") return getSkillTotal(b) - getSkillTotal(a) || sortByDefaultPriority(a, b);
+        if (sortMode === "total-asc") return getSkillTotal(a) - getSkillTotal(b) || sortByDefaultPriority(a, b);
         if (sortMode === "name") return getSkillDisplayName(a).localeCompare(getSkillDisplayName(b), "zh-CN");
         return sortByDefaultPriority(a, b);
       });
@@ -295,29 +295,14 @@
       return tags.join("");
     }
 
-    function renderSkillList() {
-      const list = $("skillList");
-      if (!list) return;
-      const search = normalizeSearchText($("skillSearch") ? $("skillSearch").value : "");
-      let visible = getAllSkills().filter((skill) => {
-        if (!skillMatchesFilter(skill)) return false;
-        if (!search) return true;
-        return normalizeSearchText(getSkillDisplayName(skill) + skill.name + (skill.defaultSpecialty || "")).includes(search);
-      });
-      visible = sortSkills(visible);
-      if (!visible.length) {
-        list.innerHTML = `<div class="skill-empty">没有符合条件的技能。</div>`;
-        updateSkillSummary();
-        return;
-      }
-      list.innerHTML = visible.map((skill) => {
-        const state = getSkillState(skill.id);
-        const occupationTag = getOccupationTagType(skill);
-        const base = computeSkillBase(skill);
-        const total = getSkillTotal(skill);
-        const highlighted = occupationTag || isCommonSkill(skill) || isAddedSkill(skill);
-        const customDeleteButton = skill.isCustom ? `<button class="skill-delete-btn" type="button" data-delete-custom-skill="${skill.id}">删除</button>` : ``;
-        return `
+    function renderSkillCard(skill) {
+      const state = getSkillState(skill.id);
+      const occupationTag = getOccupationTagType(skill);
+      const base = computeSkillBase(skill);
+      const total = getSkillTotal(skill);
+      const highlighted = occupationTag || isCommonSkill(skill) || isAddedSkill(skill);
+      const customDeleteButton = skill.isCustom ? `<button class="skill-delete-btn" type="button" data-delete-custom-skill="${skill.id}">删除</button>` : ``;
+      return `
           <section class="skill-row${highlighted ? " is-highlighted" : ""}" data-skill-id="${skill.id}">
             <label class="skill-occ-toggle">
               <input class="skill-occ-checkbox" type="checkbox" ${occupationTag ? "checked" : ""} /> 本职
@@ -343,7 +328,40 @@
             </div>
           </section>
         `;
-      }).join("");
+    }
+
+    function renderSkillSection(title, skills) {
+      const body = skills.length
+        ? `<div class="skill-section-list">${skills.map(renderSkillCard).join("")}</div>`
+        : `<div class="skill-section-empty">暂无符合条件的技能。</div>`;
+      return `
+        <details class="skill-section" open>
+          <summary><span>${title}</span><strong>${skills.length}</strong></summary>
+          ${body}
+        </details>
+      `;
+    }
+
+    function renderSkillList() {
+      const list = $("skillList");
+      if (!list) return;
+      const search = normalizeSearchText($("skillSearch") ? $("skillSearch").value : "");
+      const visible = sortSkills(getAllSkills().filter((skill) => {
+        if (!skillMatchesFilter(skill)) return false;
+        if (!search) return true;
+        return normalizeSearchText(getSkillDisplayName(skill) + skill.name + (skill.defaultSpecialty || "")).includes(search);
+      }));
+      const sections = [
+        { title: "本职技能", skills: [] },
+        { title: "常用技能", skills: [] },
+        { title: "其他技能", skills: [] }
+      ];
+      visible.forEach((skill) => {
+        if (getOccupationTagType(skill)) sections[0].skills.push(skill);
+        else if (!skill.isCustom && isCommonSkill(skill)) sections[1].skills.push(skill);
+        else sections[2].skills.push(skill);
+      });
+      list.innerHTML = sections.map((section) => renderSkillSection(section.title, section.skills)).join("");
       updateSkillSummary();
     }    function updateSkillRow(skillId) {
       const skill = getAllSkills().find((item) => item.id === skillId);
@@ -539,6 +557,8 @@ function initSkills() {
     }
   });
 }
+
+
 
 
 

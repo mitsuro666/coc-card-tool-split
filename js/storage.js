@@ -87,8 +87,12 @@ function restore() {
       skillPointData = data.skills && typeof data.skills === "object" ? data.skills : {};
       customSkillData = Array.isArray(data.customSkills) ? data.customSkills.map(normalizeCustomSkill).filter(Boolean) : [];
       if (creditRatingValue && data.creditRatingValue !== undefined) creditRatingValue.value = data.creditRatingValue;
-      currentSkillFilter = data.skillFilter === "specialized" ? "all" : (data.skillFilter || "all");
-      if ($("skillSort") && data.skillSort) $("skillSort").value = data.skillSort;
+      const savedSkillFilter = data.skillFilter === "specialized" || data.skillFilter === "occupation" || data.skillFilter === "common" ? "all" : (data.skillFilter || "all");
+      currentSkillFilter = ["all", "added", "unadded"].includes(savedSkillFilter) ? savedSkillFilter : "all";
+      if ($("skillSort") && data.skillSort) {
+        const savedSort = data.skillSort === "common" ? "priority" : (data.skillSort === "added" ? "added-first" : data.skillSort);
+        $("skillSort").value = savedSort;
+      }
       if ($("skillSearch") && data.skillSearch) $("skillSearch").value = data.skillSearch;
       restoreFields(data.assets || {});
       restoreBackgroundData(data.background || {});
@@ -171,6 +175,7 @@ function restore() {
 function initStorage() {
   window.addEventListener("beforeunload", () => flushPersist(true));
 }
+
 
 
 

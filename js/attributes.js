@@ -310,6 +310,123 @@ function renderSecondaryAttributePanel() {
     return `<div class="secondary-attribute-item"><span>${item.label}${info}</span><strong>${formatDerivedValue(item.value)}</strong></div>`;
   }).join("");
 }
+function getRadarAttributes() {
+  return [
+    { id: "attrSTR", label: "力量", key: "STR" },
+    { id: "attrCON", label: "体质", key: "CON" },
+    { id: "attrSIZ", label: "体型", key: "SIZ" },
+    { id: "attrDEX", label: "敏捷", key: "DEX" },
+    { id: "attrAPP", label: "外貌", key: "APP" },
+    { id: "attrINT", label: "智力\n灵感", key: "INT" },
+    { id: "attrPOW", label: "意志", key: "POW" },
+    { id: "attrEDU", label: "教育", key: "EDU" },
+    { id: "attrLuck", label: "幸运", key: "Luck" }
+  ];
+}
+
+function renderAttributeRadar() {
+  const panel = $("attributeRadarPanel");
+  const canvas = $("attributeRadarCanvas");
+  if (!panel || !canvas || !panel.open) return;
+
+  const cssWidth = Math.max(280, Math.round(canvas.getBoundingClientRect().width || 360));
+  const cssHeight = Math.max(240, Math.round(canvas.getBoundingClientRect().height || 280));
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.round(cssWidth * ratio);
+  canvas.height = Math.round(cssHeight * ratio);
+
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  const radarItems = getRadarAttributes().map((item) => ({
+    ...item,
+    value: Math.max(0, Math.min(100, parseAttributeValue(item.id) || 0))
+  }));
+  const hasAnyValue = radarItems.some((item) => item.value > 0);
+  const cx = cssWidth / 2;
+  const cy = cssHeight / 2 + 8;
+  const radius = Math.min(cssWidth, cssHeight) * 0.28;
+  const maxValue = 100;
+  const angleStep = Math.PI * 2 / radarItems.length;
+
+  function pointAt(index, valueRadius) {
+    const angle = -Math.PI / 2 + index * angleStep;
+    return {
+      x: cx + Math.cos(angle) * valueRadius,
+      y: cy + Math.sin(angle) * valueRadius,
+      angle
+    };
+  }
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#d6e0ea";
+  for (let step = 1; step <= 5; step += 1) {
+    const ringRadius = radius * step / 5;
+    ctx.beginPath();
+    radarItems.forEach((_, index) => {
+      const point = pointAt(index, ringRadius);
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.closePath();
+    ctx.stroke();
+  }
+
+  radarItems.forEach((item, index) => {
+    const axisEnd = pointAt(index, radius);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(axisEnd.x, axisEnd.y);
+    ctx.stroke();
+
+    const label = pointAt(index, radius + 36);
+    const lines = item.label.split("\n");
+    ctx.fillStyle = "#3f4d5c";
+    ctx.font = "12px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    lines.forEach((line, lineIndex) => {
+      ctx.fillText(line, label.x, label.y + (lineIndex - (lines.length - 1) / 2) * 14);
+    });
+    ctx.fillStyle = "#6f7f90";
+    ctx.font = "11px Arial, sans-serif";
+    ctx.fillText(item.key, label.x, label.y + lines.length * 8 + 6);
+  });
+
+  ctx.fillStyle = "#708196";
+  ctx.font = "11px Arial, sans-serif";
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+  [20, 40, 60, 80].forEach((value) => {
+    const tick = pointAt(0, radius * value / maxValue);
+    ctx.fillText(String(value), tick.x - 8, tick.y);
+  });
+  ctx.fillText("0", cx - 8, cy);
+
+  if (!hasAnyValue) return;
+
+  ctx.beginPath();
+  radarItems.forEach((item, index) => {
+    const point = pointAt(index, radius * item.value / maxValue);
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = "rgba(47, 95, 143, .68)";
+  ctx.strokeStyle = "#2f5f8f";
+  ctx.lineWidth = 2;
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#2f5f8f";
+  radarItems.forEach((item, index) => {
+    const point = pointAt(index, radius * item.value / maxValue);
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
 function updateAttributeCalculations() {
   const includeLuck = $("includeLuckInTotal").checked;
   const total = attributes.reduce((sum, attribute) => {
@@ -320,6 +437,7 @@ function updateAttributeCalculations() {
   $("usedPoints").textContent = total;
   renderAttributeLevelNotes();
   renderSecondaryAttributePanel();
+  renderAttributeRadar();
   updateAgeAdjustmentInfo();
   markPreviewDirty("attributes");
   markPreviewDirty("secondary");
@@ -447,6 +565,13 @@ function initAttributes() {
 
   $("cancelAgeAdjustmentBtn").addEventListener("click", cancelAgeAdjustment);
 
+  const radarPanel = $("attributeRadarPanel");
+  if (radarPanel) {
+    radarPanel.addEventListener("toggle", () => {
+      if (radarPanel.open) renderAttributeRadar();
+    });
+  }
+
   attributeFieldIds.forEach((id) => {
     $(id).addEventListener("input", () => {
       updateAttributeCalculations();
@@ -471,6 +596,10 @@ function initAttributes() {
     showStatus("attributeStatus", "已清空本页内容。");
   });
 }
+
+
+
+
 
 
 
