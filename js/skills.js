@@ -69,6 +69,18 @@
       return computeSkillBase(skill) + parsePointValue(state.career) + parsePointValue(state.interest);
     }
 
+
+    function getSkillTotalClass(total) {
+      if (total > 99) return " is-danger";
+      if (total > 80) return " is-warning";
+      return "";
+    }
+
+    function setPointSummaryState(el, used, target) {
+      if (!el) return;
+      const hasLimit = target !== null && target !== undefined && Number.isFinite(Number(target)) && Number(target) > 0;
+      el.classList.toggle("is-danger", Boolean(hasLimit && used > Number(target)));
+    }
     function findSelectedOccupation() {
       const selectedId = occupationIdInput && occupationIdInput.value ? Number(occupationIdInput.value) : null;
       if (selectedId !== null && Number.isFinite(selectedId)) {
@@ -274,7 +286,6 @@
     function renderSkillTags(skill) {
       const tags = [];
       const occupationTag = getOccupationTagType(skill);
-      if (occupationTag === "occupation") tags.push(`<span class="skill-tag occupation">本职</span>`);
       if (occupationTag === "candidate") tags.push(`<span class="skill-tag candidate">可选</span>`);
       const commonGroup = getCommonSkillGroup(skill);
       if (commonGroup) tags.push(`<span class="skill-tag ${commonGroup.className}">${commonGroup.label}</span>`);
@@ -308,34 +319,33 @@
         const customDeleteButton = skill.isCustom ? `<button class="skill-delete-btn" type="button" data-delete-custom-skill="${skill.id}">删除</button>` : ``;
         return `
           <section class="skill-row${highlighted ? " is-highlighted" : ""}" data-skill-id="${skill.id}">
+            <label class="skill-occ-toggle">
+              <input class="skill-occ-checkbox" type="checkbox" ${occupationTag ? "checked" : ""} /> 本职
+            </label>
             <div class="skill-title">
               <div class="skill-title-head">
                 <div class="skill-name-line">
                   <strong data-skill-name>${escapeHTML(getSkillDisplayName(skill) || skill.name)}</strong>
                   <div class="skill-tags">${renderSkillTags(skill)}</div>
                 </div>
-                <span>初始 <b data-skill-base>${base}</b></span>
               </div>
             </div>
             <div class="skill-inputs">
+              <div class="skill-base-box"><span>初始</span><strong data-skill-base>${base}</strong></div>
               <label>职业
                 <input data-skill-input="career" type="number" inputmode="numeric" min="0" value="${escapeHTML(state.career || "")}" ${skill.lockCareer ? "disabled" : ""} />
               </label>
               <label>兴趣
                 <input data-skill-input="interest" type="number" inputmode="numeric" min="0" value="${escapeHTML(state.interest || "")}" ${skill.lockInterest ? "disabled" : ""} />
               </label>
-              <div class="skill-total-box">合计 <strong data-skill-total>${total}</strong></div>
-              <label class="skill-occ-toggle">
-                <input class="skill-occ-checkbox" type="checkbox" ${occupationTag ? "checked" : ""} /> 本职
-              </label>
+              <div class="skill-total-box"><span>合计</span><strong class="skill-total-value${getSkillTotalClass(total)}" data-skill-total>${total}</strong></div>
               ${customDeleteButton}
             </div>
           </section>
         `;
       }).join("");
       updateSkillSummary();
-    }
-    function updateSkillRow(skillId) {
+    }    function updateSkillRow(skillId) {
       const skill = getAllSkills().find((item) => item.id === skillId);
       const row = document.querySelector(`.skill-row[data-skill-id="${skillId}"]`);
       if (!skill || !row) return;
@@ -345,10 +355,13 @@
       const totalEl = row.querySelector("[data-skill-total]");
       const nameEl = row.querySelector("[data-skill-name]");
       if (baseEl) baseEl.textContent = base;
-      if (totalEl) totalEl.textContent = total;
+      if (totalEl) {
+        totalEl.textContent = total;
+        totalEl.classList.toggle("is-warning", total > 80 && total <= 99);
+        totalEl.classList.toggle("is-danger", total > 99);
+      }
       if (nameEl) nameEl.textContent = getSkillDisplayName(skill) || skill.name;
     }
-
     function evaluateOccupationPointFormula(formula) {
       if (!formula) return null;
       const attrs = getAttributeMap();
@@ -401,14 +414,17 @@
       const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0);
       const careerTarget = occupation ? evaluateOccupationPointFormula(occupation.skillPointFormulaExcel) : null;
       const interestTarget = (parseAttributeValue("attrINT") || 0) * 2;
-      $("careerPointSummary").textContent = `${careerUsed} / ${careerTarget === null ? "未计算" : careerTarget}`;
-      $("interestPointSummary").textContent = `${interestUsed} / ${interestTarget || "未计算"}`;
+      const careerSummary = $("careerPointSummary");
+      const interestSummary = $("interestPointSummary");
+      careerSummary.textContent = `${careerUsed} / ${careerTarget === null ? "未计算" : careerTarget}`;
+      interestSummary.textContent = `${interestUsed} / ${interestTarget || "未计算"}`;
+      setPointSummaryState(careerSummary, careerUsed, careerTarget);
+      setPointSummaryState(interestSummary, interestUsed, interestTarget);
       $("creditRangeSummary").textContent = occupation && occupation.creditRange ? occupation.creditRange : "未读取";
       updateSkillOccupationInfo(occupation);
       updateAssetCalculations();
       markPreviewDirty("skills");
     }
-
     function updateSkillCalculations() {
       getAllSkills().forEach((skill) => updateSkillRow(skill.id));
       updateSkillSummary();
@@ -523,5 +539,11 @@ function initSkills() {
     }
   });
 }
+
+
+
+
+
+
 
 
