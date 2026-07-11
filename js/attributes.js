@@ -1,4 +1,4 @@
-﻿function renderAttributeSheet() {
+function renderAttributeSheet() {
   const sheet = $("attributeSheet");
   sheet.innerHTML = attributes.map((attribute) => `
     <section class="attribute-cell${attribute.isLuck ? " luck-cell" : ""}">
@@ -202,13 +202,13 @@ function applyAgeAdjustment() {
     for (let i = 0; i < rule.eduChecks; i += 1) {
       const eduValue = parseAttributeValue("attrEDU");
       const checkRoll = rollD100();
-      if (eduValue !== null && checkRoll <= eduValue) {
+      if (eduValue !== null && checkRoll > eduValue) {
         const gain = rollD10();
         const actual = applyAttributeDelta("attrEDU", gain);
         addAdjustment(adjustments, "attrEDU", actual);
-        messages.push(`教育进步检定 ${i + 1}：D100=${checkRoll} <= 教育${eduValue}，成功，教育 +${actual}`);
+        messages.push(`教育进步检定 ${i + 1}：D100=${checkRoll} > 教育${eduValue}，成功，教育 +${actual}`);
       } else {
-        messages.push(`教育进步检定 ${i + 1}：D100=${checkRoll} > 教育${eduValue}，未成功，教育不增加`);
+        messages.push(`教育进步检定 ${i + 1}：D100=${checkRoll} <= 教育${eduValue}，未成功，教育不增加`);
       }
     }
 

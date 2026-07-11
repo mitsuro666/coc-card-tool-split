@@ -1,4 +1,4 @@
-﻿const previewDirty = {
+const previewDirty = {
   basic: true,
   attributes: true,
   secondary: true,
@@ -71,7 +71,12 @@ function renderPreviewSkillTags(skill) {
   const commonGroup = getCommonSkillGroup(skill);
   if (commonGroup) tags.push(`<span class="skill-tag ${commonGroup.className}">${commonGroup.label}</span>`);
   const categoryGroup = getCategorySkillGroup(skill);
-  if (categoryGroup) tags.push(`<span class="skill-tag ${categoryGroup.className}">${categoryGroup.label}</span>`);
+  if (categoryGroup) {
+    const socialOption = categoryGroup.key === "social" && typeof isSocialOptionSkill === "function" && isSocialOptionSkill(skill);
+    const label = socialOption ? "社交" : categoryGroup.label;
+    const className = socialOption ? `${categoryGroup.className} social-option` : categoryGroup.className;
+    tags.push(`<span class="skill-tag ${className}">${label}</span>`);
+  }
   if (skill.isCustom) tags.push(`<span class="skill-tag custom">自定义</span>`);
   return tags.join("");
 }

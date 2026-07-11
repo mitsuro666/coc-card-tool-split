@@ -1,4 +1,4 @@
-﻿:root {
+:root {
       --bg: #f3f5f7;
       --paper: #ffffff;
       --paper-soft: #f8fafc;
@@ -968,7 +968,7 @@
 
     .other-assets-grid {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       border-top: 1px solid var(--line);
     }
 
@@ -1399,6 +1399,11 @@
       color: #6b4b7f;
     }
 
+    .skill-tag.social-option {
+      background: #fff3cf;
+      color: #8a6500;
+    }
+
     .skill-tag.common-combat {
       background: #f8eeee;
       color: #8a4a4a;
@@ -1410,8 +1415,8 @@
     }
 
     .skill-tag.category-knowledge {
-      background: #eef2f8;
-      color: #3f5c83;
+      background: #f5eadc;
+      color: #7a5732;
     }
 
     .skill-tag.category-technique {
@@ -1420,8 +1425,8 @@
     }
 
     .skill-tag.category-action {
-      background: #eef6f7;
-      color: #3a6d78;
+      background: #f0f1f3;
+      color: #606a73;
     }
 
     .skill-credit-control {
@@ -1453,8 +1458,8 @@
 
 
     .skill-tag.custom {
-      background: #eef2f6;
-      color: var(--navy-soft);
+      background: #fbeaf2;
+      color: #9a4d70;
     }
 
     .skill-delete-btn {
@@ -1466,7 +1471,8 @@
       border: 1px solid var(--line);
     }
 
-    .skill-add-btn {
+    .skill-add-btn,
+    .skill-auto-btn {
       padding: 8px 10px;
       border-radius: 11px;
       font-size: 12px;
@@ -1475,6 +1481,12 @@
       border: 1px dashed var(--line);
       white-space: nowrap;
       flex: 1 1 150px;
+    }
+
+    .skill-auto-btn {
+      border-style: solid;
+      background: var(--accent);
+      color: #fff;
     }
 
     .skill-inputs {
@@ -1577,7 +1589,8 @@
 
       .skill-tools select,
       .skill-tools input,
-      .skill-add-btn {
+      .skill-add-btn,
+    .skill-auto-btn {
         flex: 1 1 100%;
       }
 
@@ -2657,7 +2670,7 @@
 
 #skillPage .skill-tools {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: stretch;
   gap: 10px;
 }
@@ -2665,6 +2678,7 @@
 #skillPage .skill-tools select,
 #skillPage .skill-tools input,
 #skillPage .skill-add-btn,
+#skillPage .skill-auto-btn,
 #skillPage .skill-filters {
   width: 100%;
   min-width: 0;
@@ -2673,7 +2687,7 @@
 
 #skillPage .skill-filters {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -3289,6 +3303,11 @@
   color: #6b4b7f;
 }
 
+#skillPage .skill-tag.social-option {
+  background: #fff3cf;
+  color: #8a6500;
+}
+
 #skillPage .skill-tag.category-combat {
   background: #f8eeee;
   color: #8a4a4a;
@@ -3300,8 +3319,8 @@
 }
 
 #skillPage .skill-tag.category-stunt {
-  background: #eef6f7;
-  color: #3a6d78;
+  background: #f0f1f3;
+  color: #606a73;
 }
 
 #skillPage .skill-tag.category-support {
@@ -3310,8 +3329,8 @@
 }
 
 #skillPage .skill-tag.category-knowledge {
-  background: #eef2f8;
-  color: #3f5c83;
+  background: #f5eadc;
+  color: #7a5732;
 }
 
 #skillPage .skill-name-line {

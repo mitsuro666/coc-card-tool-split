@@ -1,4 +1,4 @@
-﻿    function normalizeSearchText(text) {
+    function normalizeSearchText(text) {
       return String(text || "").replace(/Ω/g, "").replace(/[\s　：:（）()、，。·/\\-]/g, "").toLowerCase();
     }
 
@@ -231,6 +231,11 @@
         .trim();
     }
 
+    function isSocialOptionSkill(skill) {
+      const name = getCanonicalSkillName(skill).replace(/：.*$/, "");
+      return ["说服", "取悦", "话术", "恐吓"].includes(name);
+    }
+
     function getCategoryOrder(skill) {
       const category = getCategorySkillGroup(skill);
       if (!category) return 9;
@@ -289,7 +294,7 @@
 
     function getSkillNoteKey(skill) {
       const name = getCanonicalSkillName(skill);
-      if (name.includes("取悦") || name.includes("魅惑")) return "取悦";
+      if (name.includes("取悦")) return "取悦";
       if (name.includes("侦察") || name.includes("侦查")) return "侦查";
       if (name.includes("斗殴")) return "斗殴";
       if (name.includes("格斗")) return "格斗";
@@ -309,7 +314,10 @@
       const occupationTag = getOccupationTagType(skill);
       if (occupationTag === "candidate") tags.push(`<span class="skill-tag candidate">可选</span>`);
       getCategorySkillGroups(skill).forEach((categoryGroup) => {
-        tags.push(`<span class="skill-tag ${categoryGroup.className}">${categoryGroup.label}</span>`);
+        const socialOption = categoryGroup.key === "social" && isSocialOptionSkill(skill);
+        const label = socialOption ? "社交" : categoryGroup.label;
+        const className = socialOption ? `${categoryGroup.className} social-option` : categoryGroup.className;
+        tags.push(`<span class="skill-tag ${className}">${label}</span>`);
       });
       if (skill.isCustom) tags.push(`<span class="skill-tag custom">自定义</span>`);
       return tags.join("");
@@ -451,6 +459,79 @@
       if (force || !creditRatingValue.value.trim()) {
         creditRatingValue.value = minimum === null ? "" : String(minimum);
       }
+    }
+
+
+    function getAutoCareerSkills() {
+      const sorted = [...getAllSkills()].sort(sortByDefaultPriority);
+      let occupationSkills = sorted.filter((skill) => getOccupationTagType(skill) && !skill.lockCareer);
+      const talentSkills = sorted.filter((skill) => isTalentSkill(skill) && !skill.lockCareer);
+      const socialOccupationSkills = occupationSkills.filter((skill) => isSocialOptionSkill(skill));
+      if (socialOccupationSkills.length > 1) {
+        const persuadeSkill = socialOccupationSkills.find((skill) => getCanonicalSkillName(skill).replace(/：.*$/, "") === "说服");
+        if (persuadeSkill) {
+          occupationSkills = occupationSkills.filter((skill) => !isSocialOptionSkill(skill) || skill.id === persuadeSkill.id);
+        }
+      }
+      const keepIds = new Set([...occupationSkills, ...talentSkills].map((skill) => String(skill.id)));
+      return sorted.filter((skill) => keepIds.has(String(skill.id)));
+    }
+
+    function getAutoInterestSkills() {
+      return [...getAllSkills()].sort(sortByDefaultPriority).filter((skill) => {
+        if (skill.lockInterest) return false;
+        if (getOccupationTagType(skill) || isTalentSkill(skill)) return false;
+        return !skill.isCustom && isCommonSkill(skill);
+      });
+    }
+
+    function clearSkillPointValues() {
+      getAllSkills().forEach((skill) => {
+        const state = getSkillState(skill.id);
+        state.career = "";
+        state.interest = "";
+      });
+    }
+
+    function distributePointsEvenly(total, skills, field) {
+      const amount = Math.max(0, Math.floor(Number(total) || 0));
+      if (!skills.length || amount <= 0) return 0;
+      const base = Math.floor(amount / skills.length);
+      const remainder = amount % skills.length;
+      let assigned = 0;
+      skills.forEach((skill, index) => {
+        const value = base + (index < remainder ? 1 : 0);
+        if (value > 0) {
+          getSkillState(skill.id)[field] = String(value);
+          assigned += value;
+        }
+      });
+      return assigned;
+    }
+
+    function autoAssignSkillPoints() {
+      const occupation = findSelectedOccupation();
+      const careerTarget = occupation ? evaluateOccupationPointFormula(occupation.skillPointFormulaExcel) : null;
+      const interestTarget = (parseAttributeValue("attrINT") || 0) * 2;
+      if (careerTarget === null) {
+        showStatus("skillStatus", "请先选择有效职业并填写属性。", true);
+        return;
+      }
+      if (!confirm("自动加点会将职业点数平均分配给本职技能，兴趣点数平均分配给常用技能，并覆盖当前填写的所有数值。是否确定执行自动加点方案？")) return;
+
+      clearSkillPointValues();
+      if (creditRatingValue) creditRatingValue.value = "";
+      fillDefaultCreditRating(true);
+
+      const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
+      const careerSkills = getAutoCareerSkills();
+      const interestSkills = getAutoInterestSkills();
+      const careerAssigned = distributePointsEvenly(Math.max(0, careerTarget - creditUsed), careerSkills, "career");
+      const interestAssigned = distributePointsEvenly(interestTarget, interestSkills, "interest");
+
+      renderSkillList();
+      persist();
+      showStatus("skillStatus", `已自动加点：职业点 ${careerAssigned}，兴趣点 ${interestAssigned}。`);
     }
 
     function updateSkillOccupationInfo(occupation) {
@@ -597,9 +678,12 @@
         ctx.fillText(item.label, label.x, label.y);
       });
       if (!items.some((item) => item.ratio > 0)) return;
+      const maxRatio = Math.max(...items.map((item) => item.ratio), 0);
+      const axisMax = maxRatio > 0 ? Math.max(0.2, Math.ceil(maxRatio * 10) / 10) : 1;
       ctx.beginPath();
       items.forEach((item, index) => {
-        const point = pointAt(index, radius * item.ratio);
+        const normalizedRatio = Math.min(1, item.ratio / axisMax);
+        const point = pointAt(index, radius * normalizedRatio);
         if (index === 0) ctx.moveTo(point.x, point.y);
         else ctx.lineTo(point.x, point.y);
       });
@@ -627,6 +711,11 @@ function initSkills() {
     $("customSkillOccupation").checked = false;
     openModal("customSkillModal");
   });
+
+  const autoAssignSkillsBtn = $("autoAssignSkillsBtn");
+  if (autoAssignSkillsBtn) {
+    autoAssignSkillsBtn.addEventListener("click", autoAssignSkillPoints);
+  }
 
   $("saveCustomSkill").addEventListener("click", () => {
     const name = $("customSkillName").value.trim();
