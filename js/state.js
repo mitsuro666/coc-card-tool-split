@@ -199,7 +199,8 @@ let customSkillData = [];
       { id: "treasuredPossessions", label: "宝贵之物" },
       { id: "traits", label: "特质" },
       { id: "scars", label: "伤口和疤痕" },
-      { id: "phobiasManias", label: "恐惧症和躁狂症" }
+      { id: "phobiasManias", label: "恐惧症和躁狂症" },
+      { id: "backgroundExtra", label: "补充内容" }
     ];
     const weaponArmorOptions = ["手枪", "步枪/霰弹枪", "匕首", "防弹衣", "盾牌", "自定义"];
     const commonSkillGroups = {
@@ -238,7 +239,7 @@ let customSkillData = [];
     let skillPointData = {};
     let talentSkillIds = [];
     let currentSkillFilter = "all";
-    let inventoryData = { weapons: [], others: [] };
+    let inventoryData = { weapons: [], armors: [], vehicles: [], others: [] };
     let imageData = { avatar: "", portrait: "", custom: [] };
 let ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
 

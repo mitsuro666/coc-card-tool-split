@@ -216,10 +216,11 @@ function renderFinalBackground() {
   return `<div class="final-note-grid">${items}</div>`;
 }
 
-function renderFinalInventoryList(items, emptyText) {
-  if (!items.length) return `<div class="final-empty">${escapeHTML(emptyText)}</div>`;
-  return `<div class="final-item-list">${items.map((item) => `
-    <div><span>${escapeHTML(finalText(item.name || item.preset, "未命名"))}</span><strong>${escapeHTML(finalText(item.quantity, "1"))}</strong></div>
+function renderFinalInventoryList(items, emptyText, labelGetter, valueGetter, type = "others") {
+  const visibleItems = type === "others" ? items : items.filter((item) => isInventoryItemValid(item, type));
+  if (!visibleItems.length) return `<div class="final-empty">${escapeHTML(emptyText)}</div>`;
+  return `<div class="final-item-list">${visibleItems.map((item) => `
+    <div><span>${escapeHTML(finalText(labelGetter(item), "未命名"))}</span><strong>${escapeHTML(finalText(valueGetter(item), "—"))}</strong></div>
   `).join("")}</div>`;
 }
 
@@ -288,8 +289,10 @@ function renderFinalSummary() {
     ${renderFinalSection("背景故事", renderFinalBackground())}
     ${renderFinalSection("随身物品", `
       <div class="final-inventory-grid">
-        <section><h4>武器防具</h4>${renderFinalInventoryList(inventoryData.weapons, "暂未添加武器防具。")}</section>
-        <section><h4>其他物品</h4>${renderFinalInventoryList(inventoryData.others, "暂未添加其他物品。")}</section>
+        <section><h4>武器</h4>${renderFinalInventoryList(inventoryData.weapons || [], "暂未添加武器。", (item) => item.name || item.weaponType, (item) => item.damage || item.skill || item.attacks, "weapons")}</section>
+        <section><h4>防具</h4>${renderFinalInventoryList(inventoryData.armors || [], "暂未添加防具。", (item) => item.armorType, (item) => item.armorValue || item.coverage, "armors")}</section>
+        <section><h4>载具</h4>${renderFinalInventoryList(inventoryData.vehicles || [], "暂未添加载具。", (item) => item.vehicleType, (item) => item.mov || item.skill, "vehicles")}</section>
+        <section><h4>其他物品</h4>${renderFinalInventoryList(inventoryData.others || [], "暂未添加其他物品。", (item) => item.name, (item) => item.quantity || "1")}</section>
       </div>
     `)}
   `;

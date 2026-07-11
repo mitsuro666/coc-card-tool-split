@@ -18,3 +18,8 @@ Thumbs.db
 
 # Temporary Git metadata workaround
 .tmp_git_store/
+
+# Generated Excel extraction previews
+.tmp_excel_extract/
+# Python cache
+__pycache__/

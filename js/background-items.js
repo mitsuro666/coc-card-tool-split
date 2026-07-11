@@ -1,56 +1,308 @@
-﻿function renderBackgroundGrid() {
+function renderBackgroundGrid() {
   const grid = $("backgroundGrid");
   if (!grid) return;
   grid.innerHTML = backgroundFields.map((field) => `
-    <section class="background-card">
+    <section class="background-card${field.id === "backgroundExtra" ? " is-wide" : ""}">
       <div class="background-card-head">
         <strong>${field.label}</strong>
         <label for="${field.id}Key"><input id="${field.id}Key" type="checkbox" data-background-key="${field.id}" /> 关键</label>
       </div>
-      <textarea id="${field.id}" data-background-field="${field.id}"></textarea>
+      <textarea id="${field.id}" data-background-field="${field.id}" rows="2"></textarea>
     </section>
   `).join("");
 }
 
+function itemCustomFlag(item) {
+  return Boolean(item && (item.isCustom === true || item.isCustom === "true"));
+}
+
 function normalizeInventoryItem(item, fallbackType) {
-  return {
+  const type = fallbackType || (item && item.type) || "others";
+  const base = {
     id: item && item.id ? String(item.id) : String(Date.now()) + "-" + Math.random().toString(16).slice(2),
-    preset: item && item.preset ? String(item.preset) : "",
+    type,
+    matchedId: item && item.matchedId ? String(item.matchedId) : "",
+    isCustom: itemCustomFlag(item)
+  };
+  if (type === "weapons") {
+    return {
+      ...base,
+      name: String((item && (item.name || item.weaponName || item.preset)) || ""),
+      weaponType: String((item && (item.weaponType || item.preset)) || ""),
+      skill: String((item && item.skill) || ""),
+      success: String((item && item.success) || ""),
+      hard: String((item && item.hard) || ""),
+      extreme: String((item && item.extreme) || ""),
+      damage: String((item && item.damage) || ""),
+      range: String((item && item.range) || ""),
+      penetrate: String((item && item.penetrate) || ""),
+      attacks: String((item && item.attacks) || ""),
+      ammo: String((item && item.ammo) || ""),
+      malfunction: String((item && item.malfunction) || "")
+    };
+  }
+  if (type === "armors") {
+    return {
+      ...base,
+      name: String((item && item.name) || ""),
+      armorType: String((item && (item.armorType || item.preset)) || ""),
+      armorValue: String((item && item.armorValue) || ""),
+      movPenalty: String((item && item.movPenalty) || ""),
+      coverage: String((item && item.coverage) || ""),
+      species: String((item && item.species) || ""),
+      special: String((item && item.special) || ""),
+      era: String((item && item.era) || ""),
+      price: String((item && item.price) || "")
+    };
+  }
+  if (type === "vehicles") {
+    return {
+      ...base,
+      name: String((item && item.name) || ""),
+      vehicleType: String((item && (item.vehicleType || item.preset)) || ""),
+      skill: String((item && item.skill) || ""),
+      mov: String((item && item.mov) || ""),
+      build: String((item && item.build) || ""),
+      passengerArmor: String((item && item.passengerArmor) || ""),
+      passengers: String((item && item.passengers) || ""),
+      drivableBuild: String((item && item.drivableBuild) || ""),
+      rideableBuild: String((item && item.rideableBuild) || ""),
+      era: String((item && item.era) || "")
+    };
+  }
+  return {
+    ...base,
+    isCustom: true,
     name: item && item.name ? String(item.name) : "",
     quantity: item && item.quantity ? String(item.quantity) : "1",
-    type: fallbackType
+    location: item && item.location ? String(item.location) : "其他",
+    status: item && item.status ? String(item.status) : "显露"
   };
 }
 
+function createDefaultInventoryExamples() {
+  const weapon = normalizeInventoryItem({ name: "手枪", weaponType: ".22(5.6mm)小型自动手枪" }, "weapons");
+  applyInventoryMatch(weapon, "weapons", findInventoryMatch("weapons", weapon.weaponType));
+  const armor = normalizeInventoryItem({ name: "防弹衣", armorType: "常规防弹衣" }, "armors");
+  applyInventoryMatch(armor, "armors", findInventoryMatch("armors", armor.armorType));
+  const other = normalizeInventoryItem({ name: "手电筒", quantity: "1", location: "背包", status: "隐藏" }, "others");
+  return { weapons: [weapon], armors: [armor], vehicles: [], others: [other] };
+}
+
+function ensureInitialInventoryExamples() {
+  if ((inventoryData.weapons && inventoryData.weapons.length) || (inventoryData.armors && inventoryData.armors.length) || (inventoryData.others && inventoryData.others.length)) return;
+  inventoryData = createDefaultInventoryExamples();
+}
 function createInventoryItem(type) {
   return normalizeInventoryItem({ quantity: "1" }, type);
 }
 
+function getInventoryDatabase(type) {
+  if (type === "weapons") return typeof weaponDatabase !== "undefined" ? weaponDatabase : [];
+  if (type === "armors") return typeof armorDatabase !== "undefined" ? armorDatabase : [];
+  if (type === "vehicles") return typeof vehicleDatabase !== "undefined" ? vehicleDatabase : [];
+  return [];
+}
+
+function getInventoryNameField(type) {
+  if (type === "weapons") return "weaponType";
+  if (type === "armors") return "armorType";
+  if (type === "vehicles") return "vehicleType";
+  return "name";
+}
+
+function findInventoryMatch(type, value) {
+  const text = String(value || "").trim();
+  if (!text) return null;
+  const nameField = getInventoryNameField(type);
+  return getInventoryDatabase(type).find((entry) => String(entry[nameField] || entry.name || "").trim() === text) || null;
+}
+
+function clearInventoryDetails(item, type) {
+  const nameField = getInventoryNameField(type);
+  Object.keys(item).forEach((key) => {
+    if (["id", "type", "isCustom", "matchedId", "name", nameField].includes(key)) return;
+    item[key] = "";
+  });
+  item.matchedId = "";
+}
+
+function applyInventoryMatch(item, type, match) {
+  if (!match) {
+    clearInventoryDetails(item, type);
+    return;
+  }
+  item.isCustom = false;
+  item.matchedId = match.id || "";
+  if (type === "weapons") {
+    item.weaponType = match.weaponType || match.name || "";
+    item.skill = match.skill || "";
+    item.damage = match.damage || "";
+    item.range = match.range || "";
+    item.penetrate = match.penetrate || "";
+    item.attacks = match.attacks || "";
+    item.ammo = match.ammo || "";
+    item.malfunction = match.malfunction || "";
+    item.success = "";
+    item.hard = "";
+    item.extreme = "";
+  }
+  if (type === "armors") {
+    item.armorType = match.armorType || "";
+    item.armorValue = match.armorValue || "";
+    item.movPenalty = match.movPenalty || "";
+    item.coverage = match.coverage || "";
+    item.species = match.species || "";
+    item.special = match.pierceResistant || match.special || "";
+    item.era = match.era || "";
+    item.price = match.price || "";
+  }
+  if (type === "vehicles") {
+    item.vehicleType = match.vehicleType || "";
+    item.skill = match.skill || "";
+    item.mov = match.mov || "";
+    item.build = match.build || "";
+    item.passengerArmor = match.passengerArmor || "";
+    item.passengers = match.passengers || "";
+    item.drivableBuild = match.drivableBuild || "";
+    item.rideableBuild = match.rideableBuild || "";
+    item.era = match.era || "";
+  }
+}
+function syncInventoryMatch(item, type) {
+  if (!item || type === "others") return;
+  const value = item[getInventoryNameField(type)] || item.name || "";
+  const match = findInventoryMatch(type, value);
+  if (!match) {
+    item.matchedId = "";
+    return;
+  }
+  if (item.matchedId !== match.id) applyInventoryMatch(item, type, match);
+}
+
+function isInventoryItemValid(item, type) {
+  if (!item) return false;
+  if (type === "others") return Boolean(String(item.name || "").trim());
+  if (["weapons", "armors", "vehicles"].includes(type)) return Boolean(String(item.name || item[getInventoryNameField(type)] || "").trim());
+  if (itemCustomFlag(item)) return Boolean(String(item[getInventoryNameField(type)] || item.name || "").trim());
+  return Boolean(item.matchedId && findInventoryMatch(type, item[getInventoryNameField(type)] || item.name));
+}
+
+function inventoryInput(field, value, placeholder, options = {}) {
+  const inputType = options.inputType || "text";
+  const mode = inputType === "number" ? ' type="number" inputmode="numeric" min="0"' : ' type="text"';
+  const readonly = options.readonly ? ' readonly aria-readonly="true"' : "";
+  const list = options.list ? ` list="${options.list}"` : "";
+  const className = options.className ? ` class="${options.className}"` : "";
+  return `<input data-item-field="${field}"${mode}${list}${className}${readonly} value="${escapeHTML(value || "")}" autocomplete="off" />`;
+}
+
+function isInventoryDetailReadonly(item, type) {
+  if (["weapons", "armors", "vehicles"].includes(type)) return Boolean(item && item.matchedId && findInventoryMatch(type, item[getInventoryNameField(type)]));
+  return !itemCustomFlag(item);
+}
+
+function inventoryDetail(label, field, value, item, type, inputType = "text") {
+  return `<label class="inventory-field"><span>${escapeHTML(label)}</span>${inventoryInput(field, value, label, {
+    inputType,
+    readonly: isInventoryDetailReadonly(item, type)
+  })}</label>`;
+}
+
+function inventoryNameField(label, field, value, listId) {
+  return `<label class="inventory-field inventory-name-cell"><span>${escapeHTML(label)}</span>${inventoryInput(field, value, label, {
+    list: listId,
+    className: "inventory-name-input"
+  })}</label>`;
+}
+
+function inventoryTypeField(item, field, listId) {
+  return inventoryNameField("类型", field, item[field] || "", listId);
+}
+
+function inventorySelect(field, value, options) {
+  return `<select data-item-field="${field}">${options.map((option) => `<option value="${escapeHTML(option)}" ${String(value || "") === option ? "selected" : ""}>${escapeHTML(option)}</option>`).join("")}</select>`;
+}
+function inventoryCustomToggle(item) {
+  return `<label class="inventory-field inventory-custom-toggle"><span>自定义</span><input type="checkbox" data-item-custom ${itemCustomFlag(item) ? "checked" : ""} /></label>`;
+}
+
+function inventoryMatchHint(item, type) {
+  if (type === "others" || itemCustomFlag(item)) return `<div class="inventory-field inventory-hint-cell"><span>注释</span><strong>自定义项目</strong></div>`;
+  const value = item[getInventoryNameField(type)] || item.name || "";
+  if (!String(value).trim()) return `<div class="inventory-field inventory-hint-cell"><span>注释</span><strong>请输入名称并选择精确匹配项</strong></div>`;
+  if (!isInventoryItemValid(item, type)) return `<div class="inventory-field inventory-hint-cell is-warning"><span>注释</span><strong>未匹配，请勾选自定义</strong></div>`;
+  return `<div class="inventory-field inventory-hint-cell is-valid"><span>注释</span><strong>已匹配规则库</strong></div>`;
+}
+
+function inventoryTableHeader(rowClass, labels) {
+  return `<div class="inventory-table-head ${rowClass}">${labels.map((label) => `<span>${escapeHTML(label)}</span>`).join("")}</div>`;
+}
+
 function renderInventoryLists() {
-  renderWeaponArmorList();
+  renderWeaponList();
+  renderArmorList();
   renderOtherItemList();
 }
 
-function renderWeaponArmorList() {
+function renderWeaponList() {
   const list = $("weaponArmorList");
   if (!list) return;
   if (!inventoryData.weapons.length) {
-    list.innerHTML = `<div class="inventory-empty">暂未添加武器防具。</div>`;
+    list.innerHTML = `<div class="inventory-empty">暂未添加武器。</div>`;
     return;
   }
-  list.innerHTML = inventoryData.weapons.map((item) => `
-    <section class="inventory-row weapon-row" data-inventory-type="weapons" data-item-id="${item.id}">
-      <select data-item-field="preset" aria-label="武器防具类型">
-        <option value="">选择类型</option>
-        ${weaponArmorOptions.map((option) => `<option value="${escapeHTML(option)}" ${item.preset === option ? "selected" : ""}>${escapeHTML(option)}</option>`).join("")}
-      </select>
-      <input data-item-field="name" type="text" value="${escapeHTML(item.name)}" placeholder="名称" autocomplete="off" />
-      <input data-item-field="quantity" type="number" inputmode="numeric" min="0" value="${escapeHTML(item.quantity)}" placeholder="数量" />
+  inventoryData.weapons.forEach((item) => syncInventoryMatch(item, "weapons"));
+  const rows = inventoryData.weapons.map((item) => `
+    <section class="inventory-row weapon-row ${isInventoryItemValid(item, "weapons") ? "is-valid" : "is-unmatched"}" data-inventory-type="weapons" data-item-id="${item.id}">
+      ${inventoryNameField("武器名称", "name", item.name)}
+      ${inventoryTypeField(item, "weaponType", "weaponDatabaseOptions")}
+      ${inventoryDetail("使用技能", "skill", item.skill, item, "weapons")}
+      ${inventoryDetail("伤害", "damage", item.damage, item, "weapons")}
+      ${inventoryDetail("基础射程", "range", item.range, item, "weapons")}
+      ${inventoryDetail("贯穿", "penetrate", item.penetrate, item, "weapons")}
+      ${inventoryDetail("次数", "attacks", item.attacks, item, "weapons")}
+      ${inventoryDetail("装弹量", "ammo", item.ammo, item, "weapons")}
+      ${inventoryDetail("故障值", "malfunction", item.malfunction, item, "weapons")}
       <button class="inventory-delete" type="button" data-delete-item>删除</button>
     </section>
   `).join("");
+  list.innerHTML = `
+    <div class="inventory-table item-table weapon-table">
+      ${inventoryTableHeader("weapon-row", ["武器名称", "类型", "使用技能", "伤害", "基础射程", "贯穿", "次数", "装弹量", "故障值", ""])}
+      ${rows}
+    </div>
+  `;
 }
-
+function renderArmorList() {
+  const list = $("armorList");
+  if (!list) return;
+  if (!inventoryData.armors.length) {
+    list.innerHTML = `<div class="inventory-empty">暂未添加防具。</div>`;
+    return;
+  }
+  inventoryData.armors.forEach((item) => syncInventoryMatch(item, "armors"));
+  const rows = inventoryData.armors.map((item) => `
+    <section class="inventory-row armor-row ${isInventoryItemValid(item, "armors") ? "is-valid" : "is-unmatched"}" data-inventory-type="armors" data-item-id="${item.id}">
+      ${inventoryNameField("防具名称", "name", item.name)}
+      ${inventoryTypeField(item, "armorType", "armorDatabaseOptions")}
+      ${inventoryDetail("护甲值", "armorValue", item.armorValue, item, "armors", "number")}
+      ${inventoryDetail("MOV惩罚", "movPenalty", item.movPenalty, item, "armors")}
+      ${inventoryDetail("覆盖位置", "coverage", item.coverage, item, "armors")}
+      ${inventoryDetail("使用物种", "species", item.species, item, "armors")}
+      ${inventoryDetail("防刺器", "special", item.special, item, "armors")}
+      ${inventoryDetail("常见时代", "era", item.era, item, "armors")}
+      ${inventoryDetail("价格20s/现代", "price", item.price, item, "armors")}
+      <button class="inventory-delete" type="button" data-delete-item>删除</button>
+    </section>
+  `).join("");
+  list.innerHTML = `
+    <div class="inventory-table item-table armor-table">
+      ${inventoryTableHeader("armor-row", ["防具名称", "类型", "护甲值", "MOV惩罚", "覆盖位置", "使用物种", "防刺器", "常见时代", "价格20s/现代", ""])}
+      ${rows}
+    </div>
+  `;
+}
 function renderOtherItemList() {
   const list = $("otherItemList");
   if (!list) return;
@@ -58,13 +310,38 @@ function renderOtherItemList() {
     list.innerHTML = `<div class="inventory-empty">暂未添加其他物品。</div>`;
     return;
   }
-  list.innerHTML = inventoryData.others.map((item) => `
-    <section class="inventory-row" data-inventory-type="others" data-item-id="${item.id}">
-      <input data-item-field="name" type="text" value="${escapeHTML(item.name)}" placeholder="物品名称" autocomplete="off" />
-      <input data-item-field="quantity" type="number" inputmode="numeric" min="0" value="${escapeHTML(item.quantity)}" placeholder="数量" />
+  const rows = inventoryData.others.map((item) => `
+    <section class="inventory-row other-item-row" data-inventory-type="others" data-item-id="${item.id}">
+      ${inventoryInput("name", item.name, "物品名称")}
+      ${inventoryInput("quantity", item.quantity, "数量", { inputType: "number" })}
+      ${inventorySelect("location", item.location, ["颅", "躯", "服", "上肢", "下肢", "背包", "其他"])}
+      ${inventorySelect("status", item.status, ["显露", "隐藏", "自定义"])}
       <button class="inventory-delete" type="button" data-delete-item>删除</button>
     </section>
   `).join("");
+  list.innerHTML = `
+    <div class="inventory-table item-table other-table">
+      ${inventoryTableHeader("other-item-row", ["物品名称", "数量", "部位", "状态", ""])}
+      ${rows}
+    </div>
+  `;
+}
+
+function ensureInventoryDatalists() {
+  const configs = [
+    ["weaponDatabaseOptions", getInventoryDatabase("weapons"), "weaponType"],
+    ["armorDatabaseOptions", getInventoryDatabase("armors"), "armorType"],
+    ["vehicleDatabaseOptions", getInventoryDatabase("vehicles"), "vehicleType"]
+  ];
+  configs.forEach(([id, database, field]) => {
+    let el = $(id);
+    if (!el) {
+      el = document.createElement("datalist");
+      el.id = id;
+      document.body.appendChild(el);
+    }
+    el.innerHTML = database.map((item) => `<option value="${escapeHTML(item[field] || item.name || "")}"></option>`).join("");
+  });
 }
 
 function getCreditRatingNumber() {
@@ -202,20 +479,44 @@ function restoreBackgroundData(values) {
 function handleInventoryInput(event) {
   const row = event.target.closest(".inventory-row");
   if (!row) return;
-  const collection = inventoryData[row.dataset.inventoryType];
+  const type = row.dataset.inventoryType;
+  const collection = inventoryData[type];
   const item = collection && collection.find((entry) => entry.id === row.dataset.itemId);
   if (!item) return;
   const field = event.target.dataset.itemField;
   if (!field) return;
   item[field] = event.target.value;
-  if (field === "preset" && event.target.value && event.target.value !== "自定义") {
-    item.name = event.target.value;
-    renderInventoryLists();
+  if (type !== "others" && field === getInventoryNameField(type)) {
+    const match = findInventoryMatch(type, event.target.value);
+    if (match) {
+      applyInventoryMatch(item, type, match);
+      renderInventoryLists();
+    } else if (event.type === "change") {
+      clearInventoryDetails(item, type);
+      renderInventoryLists();
+    } else {
+      item.matchedId = "";
+    }
   }
-  if (field === "preset" && event.target.value === "自定义" && item.name === item.preset) {
-    item.name = "";
-    renderInventoryLists();
+  persist();
+}
+
+function handleInventoryCustomChange(event) {
+  const checkbox = event.target.closest("[data-item-custom]");
+  if (!checkbox) return;
+  const row = checkbox.closest(".inventory-row");
+  if (!row) return;
+  const type = row.dataset.inventoryType;
+  const collection = inventoryData[type];
+  const item = collection && collection.find((entry) => entry.id === row.dataset.itemId);
+  if (!item) return;
+  item.isCustom = checkbox.checked;
+  if (item.isCustom) {
+    item.matchedId = "";
+  } else {
+    applyInventoryMatch(item, type, findInventoryMatch(type, item[getInventoryNameField(type)] || item.name));
   }
+  renderInventoryLists();
   persist();
 }
 
@@ -232,6 +533,7 @@ function handleInventoryDelete(event) {
 
 function initBackgroundItems() {
   renderBackgroundGrid();
+  ensureInventoryDatalists();
 
   $("resetItemsBtn").addEventListener("click", () => {
     if (!confirm("确定清空背景&物品页的内容吗？")) return;
@@ -243,7 +545,7 @@ function initBackgroundItems() {
       if ($(field.id)) $(field.id).value = "";
       if ($(field.id + "Key")) $(field.id + "Key").checked = false;
     });
-    inventoryData = { weapons: [], others: [] };
+    inventoryData = { weapons: [], armors: [], vehicles: [], others: [] };
     renderInventoryLists();
     updateAssetCalculations();
     persist();
@@ -264,9 +566,16 @@ function initBackgroundItems() {
 
   $("addWeaponItem").addEventListener("click", () => {
     inventoryData.weapons.push(createInventoryItem("weapons"));
-    renderWeaponArmorList();
+    renderWeaponList();
     persist();
   });
+
+  $("addArmorItem").addEventListener("click", () => {
+    inventoryData.armors.push(createInventoryItem("armors"));
+    renderArmorList();
+    persist();
+  });
+
 
   $("addOtherItem").addEventListener("click", () => {
     inventoryData.others.push(createInventoryItem("others"));
@@ -274,10 +583,12 @@ function initBackgroundItems() {
     persist();
   });
 
-  $("weaponArmorList").addEventListener("input", handleInventoryInput);
-  $("weaponArmorList").addEventListener("change", handleInventoryInput);
-  $("weaponArmorList").addEventListener("click", handleInventoryDelete);
-  $("otherItemList").addEventListener("input", handleInventoryInput);
-  $("otherItemList").addEventListener("click", handleInventoryDelete);
+  ["weaponArmorList", "armorList", "otherItemList"].forEach((id) => {
+    const list = $(id);
+    if (!list) return;
+    list.addEventListener("input", handleInventoryInput);
+    list.addEventListener("change", handleInventoryInput);
+    list.addEventListener("change", handleInventoryCustomChange);
+    list.addEventListener("click", handleInventoryDelete);
+  });
 }
-

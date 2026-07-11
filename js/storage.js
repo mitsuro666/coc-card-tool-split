@@ -1,4 +1,4 @@
-﻿let saveTimer = null;
+let saveTimer = null;
 
 function collectData() {
   const profile = {};
@@ -100,6 +100,8 @@ function restore() {
       restoreBackgroundData(data.background || {});
       inventoryData = {
         weapons: Array.isArray(data.inventory && data.inventory.weapons) ? data.inventory.weapons.map((item) => normalizeInventoryItem(item, "weapons")) : [],
+        armors: Array.isArray(data.inventory && data.inventory.armors) ? data.inventory.armors.map((item) => normalizeInventoryItem(item, "armors")) : [],
+        vehicles: Array.isArray(data.inventory && data.inventory.vehicles) ? data.inventory.vehicles.map((item) => normalizeInventoryItem(item, "vehicles")) : [],
         others: Array.isArray(data.inventory && data.inventory.others) ? data.inventory.others.map((item) => normalizeInventoryItem(item, "others")) : []
       };
       imageData = normalizeImageData(data.images || data.imageData || {});

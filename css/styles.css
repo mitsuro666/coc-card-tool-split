@@ -968,8 +968,9 @@
 
     .other-assets-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
       border-top: 1px solid var(--line);
+      overflow-x: auto;
     }
 
     .other-asset-cell {
@@ -1071,10 +1072,18 @@
       cursor: pointer;
     }
 
+    .background-card.is-wide {
+      grid-column: 1 / -1;
+    }
+
+    .background-card.is-wide textarea {
+      min-height: 132px;
+    }
+
     .background-card textarea {
       border: 0;
       border-radius: 0;
-      min-height: 94px;
+      min-height: 58px;
       resize: vertical;
       background: #fff;
       font-size: 14px;
@@ -1084,7 +1093,7 @@
     .inventory-board {
       padding: 14px;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: 1fr;
       gap: 14px;
       background: #fff;
     }
@@ -1116,6 +1125,7 @@
       display: grid;
       gap: 9px;
       padding: 11px;
+      overflow-x: auto;
     }
 
     .inventory-empty {
@@ -1139,8 +1149,120 @@
       background: #fff;
     }
 
-    .inventory-row.weapon-row {
-      grid-template-columns: minmax(96px, .9fr) minmax(0, 1fr) 64px auto;
+    .inventory-row.weapon-row,
+    .inventory-table-head.weapon-row {
+      grid-template-columns: minmax(112px, 1.25fr) minmax(112px, 1.25fr) minmax(72px, .8fr) minmax(82px, .9fr) minmax(68px, .75fr) minmax(46px, .5fr) minmax(46px, .5fr) minmax(54px, .6fr) minmax(54px, .6fr) 44px;
+      min-width: 686px;
+    }
+
+    .inventory-row.armor-row,
+    .inventory-table-head.armor-row {
+      grid-template-columns: minmax(112px, 1.25fr) minmax(112px, 1.25fr) minmax(58px, .65fr) minmax(66px, .72fr) minmax(88px, .98fr) minmax(78px, .86fr) minmax(58px, .64fr) minmax(82px, .9fr) minmax(92px, 1fr) 44px;
+      min-width: 728px;
+    }
+
+    .inventory-row.vehicle-row,
+    .inventory-table-head.vehicle-row {
+      grid-template-columns: minmax(112px, 1.2fr) minmax(112px, 1.2fr) minmax(72px, .76fr) minmax(72px, .76fr) minmax(66px, .7fr) minmax(74px, .78fr) minmax(52px, .55fr) minmax(82px, .86fr) minmax(82px, .86fr) minmax(82px, .86fr) 44px;
+      min-width: 788px;
+    }
+    .inventory-row.other-item-row,
+    .inventory-table-head.other-item-row {
+      grid-template-columns: minmax(150px, 1.8fr) minmax(54px, .65fr) minmax(68px, .8fr) minmax(76px, .9fr) 44px;
+      min-width: 388px;
+    }
+
+    .inventory-table {
+      display: grid;
+      gap: 0;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .inventory-table-head {
+      display: grid;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 9px;
+      background: #eef4fa;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
+    .inventory-table .inventory-row {
+      border: 0;
+      border-top: 1px solid var(--line);
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .inventory-table .inventory-row .inventory-field > span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .item-table {
+      width: 100%;
+      border-radius: 0;
+    }
+
+    .item-table .inventory-table-head,
+    .item-table .inventory-row {
+      gap: 0;
+      padding: 0;
+    }
+
+    .item-table .inventory-table-head span,
+    .item-table .inventory-row > label,
+    .item-table .inventory-row > button {
+      min-width: 0;
+      border-right: 1px solid var(--line);
+    }
+
+    .item-table .inventory-table-head span {
+      padding: 6px 7px;
+      text-align: center;
+    }
+
+    .item-table .inventory-row > label:last-of-type,
+    .item-table .inventory-row > button:last-child,
+    .item-table .inventory-table-head span:last-child {
+      border-right: 0;
+    }
+
+    .item-table .inventory-row input,
+    .item-table .inventory-row select {
+      width: 100%;
+      min-height: 30px;
+      padding: 4px 7px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      box-shadow: none;
+    }
+
+    .item-table .inventory-row input[readonly] {
+      background: #f3f6f9;
+    }
+
+    .item-table .inventory-delete {
+      align-self: stretch;
+      width: 40px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
     }
 
     .inventory-row input,
@@ -1149,8 +1271,103 @@
       border-radius: 10px;
       font-size: 13px;
     }
+    .inventory-field,
+    .inventory-name-cell {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .inventory-field span {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .inventory-name-input {
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .inventory-type-cell {
+      gap: 3px;
+    }
+
+    .inventory-type-cell em {
+      color: var(--muted);
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: normal;
+    }
+
+    .inventory-type-cell.is-warning em {
+      color: var(--danger);
+    }
+
+    .inventory-type-cell.is-valid em {
+      color: #327352;
+    }
+
+    .inventory-row input[readonly] {
+      color: var(--navy);
+      background: #eef3f8;
+      border-color: #d6e1ec;
+      cursor: default;
+    }
+
+    .inventory-custom-toggle {
+      justify-items: center;
+      align-content: end;
+      color: var(--navy);
+      white-space: nowrap;
+    }
+
+    .inventory-custom-toggle input {
+      width: 18px;
+      min-height: 18px;
+      padding: 0;
+      margin: 4px 0 0;
+    }
+
+    .inventory-hint-cell strong {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      padding: 0 9px;
+      border: 1px solid #d6e1ec;
+      border-radius: 10px;
+      background: #f5f8fb;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 700;
+    }
+
+    .inventory-hint-cell.is-warning strong {
+      color: var(--danger);
+      border-color: #efc7c7;
+      background: #fff6f6;
+    }
+
+    .inventory-hint-cell.is-valid strong {
+      color: #327352;
+      border-color: #c4ddcf;
+      background: #f4fbf7;
+    }
+
+    .inventory-row.is-unmatched {
+      border-color: #d8e3ee;
+    }
+
+    .inventory-row.is-valid {
+      border-color: #b7cadc;
+    }
 
     .inventory-delete {
+      align-self: end;
       padding: 8px 9px;
       border-radius: 10px;
       background: #fff;
@@ -1164,6 +1381,46 @@
       filter: none;
     }
 
+
+    /* final item table override */
+    .item-table .inventory-table-head,
+    .item-table .inventory-row {
+      gap: 0;
+      padding: 0;
+    }
+
+    .item-table .inventory-table-head span,
+    .item-table .inventory-row > label,
+    .item-table .inventory-row > button {
+      min-width: 0;
+      border-right: 1px solid var(--line);
+    }
+
+    .item-table .inventory-row input,
+    .item-table .inventory-row select {
+      width: 100%;
+      min-height: 30px;
+      padding: 4px 7px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      box-shadow: none;
+    }
+
+    .item-table .inventory-row input[readonly] {
+      background: #f3f6f9;
+    }
+
+    .item-table .inventory-delete {
+      align-self: stretch;
+      width: 40px;
+      min-height: 30px;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
     .asset-mini-hint {
       padding: 10px 14px 0;
       color: var(--muted);
@@ -1624,19 +1881,7 @@
       }
 
       .other-assets-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .other-asset-cell:nth-child(2n) {
-        border-right: 0;
-      }
-
-      .other-asset-cell:nth-child(n + 3) {
-        border-top: 1px solid var(--line);
-      }
-
-      .inventory-row.weapon-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(5, minmax(120px, 1fr));
       }
 
       .app-shell {
