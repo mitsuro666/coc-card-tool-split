@@ -119,8 +119,30 @@ function openPage(page, options = {}) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+
+const mobileToolbarButtonLabels = [
+  ["nextBtn", "下一步：属性购点 →", "属性购点 →"],
+  ["backToProfile", "← 上一步：基础信息", "← 基础信息"],
+  ["nextAttributesBtn", "下一步：技能加点 →", "技能加点 →"],
+  ["backToAttributes", "← 上一步：属性购点", "← 属性购点"],
+  ["nextSkillsBtn", "下一步：背景&物品 →", "背景&物品 →"],
+  ["backToSkills", "← 上一步：技能加点", "← 技能加点"],
+  ["nextItemsBtn", "下一步：头像立绘 →", "头像立绘 →"],
+  ["backToItems", "← 上一步：背景&物品", "← 背景&物品"],
+  ["nextImagesBtn", "下一步：角色生成 →", "角色生成 →"],
+  ["backFinalToImagesBottom", "← 上一步：头像立绘", "← 头像立绘"]
+];
+
+function updateMobileToolbarButtonLabels() {
+  const isMobile = window.matchMedia && window.matchMedia("(max-width: 720px)").matches;
+  mobileToolbarButtonLabels.forEach(([id, desktopLabel, mobileLabel]) => {
+    const button = $(id);
+    if (button) button.textContent = isMobile ? mobileLabel : desktopLabel;
+  });
+}
 function initRouter() {
   renderStepNav();
+  updateMobileToolbarButtonLabels();
 
   $("progressPill").addEventListener("click", (event) => {
     const button = event.target.closest("[data-step-page]");
@@ -153,4 +175,5 @@ function initRouter() {
   const backFinalToImages = $("backFinalToImages");
   if (backFinalToImages) backFinalToImages.addEventListener("click", () => openPage("images"));
   $("backFinalToImagesBottom").addEventListener("click", () => openPage("images"));
+  window.addEventListener("resize", updateMobileToolbarButtonLabels);
 }

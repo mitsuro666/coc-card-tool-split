@@ -304,6 +304,14 @@ function calculateSecondaryAttributes() {
   ];
 }
 
+function isMobileAttributeLayout() {
+  return window.matchMedia && window.matchMedia("(max-width: 720px)").matches;
+}
+
+function formatSecondaryAttributePanelValue(value) {
+  if (value === null || value === undefined || value === "") return isMobileAttributeLayout() ? "空" : "未计算";
+  return String(value);
+}
 function renderSecondaryAttributePanel() {
   const list = $("secondaryAttributeList");
   if (!list) return;
@@ -311,7 +319,9 @@ function renderSecondaryAttributePanel() {
     const info = secondaryAttributeNotes[item.key]
       ? `<span class="info-dot secondary-info-trigger" data-info-note data-info-type="secondary" data-info-key="${item.key}" aria-label="次要属性说明">i</span>`
       : "";
-    return `<div class="secondary-attribute-item"><span>${item.label}${info}</span><strong>${formatDerivedValue(item.value)}</strong></div>`;
+    const valueText = formatSecondaryAttributePanelValue(item.value);
+    const valueClass = item.value === null || item.value === undefined || item.value === "" ? " class=\"is-empty-value\"" : "";
+    return `<div class="secondary-attribute-item"><span>${item.label}${info}</span><strong${valueClass}>${valueText}</strong></div>`;
   }).join("");
 }
 function getRadarAttributes() {
@@ -481,6 +491,13 @@ function formatRollText(values) {
   return `${parts.join("，")}｜合计 ${getGeneratedTotal(values)}`;
 }
 
+function formatRollAttributeLine(values) {
+  return attributes
+    .filter((attribute) => !attribute.isLuck)
+    .map((attribute) => `${attribute.name}${values[attribute.key]}`)
+    .join("，");
+}
+
 function addRollRecord(count = 1) {
   const newRecords = [];
   for (let i = 0; i < count; i += 1) {
@@ -506,7 +523,7 @@ function renderRollHistory() {
 
   container.innerHTML = rollHistoryData.map((record, index) => `
     <section class="roll-item" data-roll-id="${record.id}">
-      <p class="roll-text"><strong>属性组 ${index + 1}</strong>　${record.text}</p>
+      <p class="roll-text"><strong class="roll-title">属性组 ${index + 1}</strong><span class="roll-attributes">${formatRollAttributeLine(record.values)}</span><span class="roll-total">合计：${getGeneratedTotal(record.values)}</span></p>
       <div class="roll-item-actions">
         <button class="small secondary" type="button" data-action="fill-empty">填入空项</button>
         <button class="small" type="button" data-action="overwrite">覆盖属性</button>
@@ -587,6 +604,8 @@ function initAttributes() {
       persist();
     });
   });
+
+  window.addEventListener("resize", renderSecondaryAttributePanel);
 
   $("resetAttributesBtn").addEventListener("click", () => {
     if (!confirm("确定清空属性购点页的内容吗？随机属性记录也会一起清空。")) return;

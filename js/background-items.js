@@ -216,12 +216,30 @@ function inventoryNameField(label, field, value, listId, className = "inventory-
   })}</label>`;
 }
 
+function inventoryTypeOptionValues(field, currentValue) {
+  const type = field === "weaponType" ? "weapons" : field === "armorType" ? "armors" : "vehicles";
+  const database = type === "armors" ? getInventoryDatabase(type).filter(isHumanUsableArmor) : getInventoryDatabase(type);
+  const values = database.map((item) => item[field] || item.name || "").filter(Boolean);
+  const unique = [...new Set(values)];
+  const current = String(currentValue || "").trim();
+  if (current && !unique.includes(current)) unique.unshift(current);
+  return unique;
+}
+
+function inventoryTypeSelectField(item, label, field, value) {
+  const options = inventoryTypeOptionValues(field, value);
+  return `<label class="inventory-field inventory-mobile-type-cell"><span>${escapeHTML(label)}</span><select class="inventory-mobile-type-select" data-item-field="${field}"><option value="__custom__" ${itemCustomFlag(item) ? "selected" : ""}>\u81ea\u5b9a\u4e49</option><option value="">\u8bf7\u9009\u62e9</option>${options.map((option) => `<option value="${escapeHTML(option)}" ${!itemCustomFlag(item) && String(value || "") === option ? "selected" : ""}>${escapeHTML(option)}</option>`).join("")}</select></label>`;
+}
+
 function inventoryTypeField(item, field, listId) {
-  return inventoryNameField("类型", field, item[field] || "", listId, "inventory-name-input inventory-type-input");
+  return inventoryNameField("\u7c7b\u578b", field, item[field] || "", listId, "inventory-name-input inventory-type-input") + inventoryTypeSelectField(item, "\u7c7b\u578b", field, item[field] || "");
 }
 
 function inventorySelect(field, value, options) {
   return `<select data-item-field="${field}">${options.map((option) => `<option value="${escapeHTML(option)}" ${String(value || "") === option ? "selected" : ""}>${escapeHTML(option)}</option>`).join("")}</select>`;
+}
+function inventorySelectField(label, field, value, options) {
+  return `<label class="inventory-field"><span>${escapeHTML(label)}</span>${inventorySelect(field, value, options)}</label>`;
 }
 function inventoryCustomToggle(item) {
   return `<label class="inventory-field inventory-custom-toggle"><span>自定义</span><input type="checkbox" data-item-custom ${itemCustomFlag(item) ? "checked" : ""} /></label>`;
@@ -254,7 +272,7 @@ function renderWeaponList() {
   }
   inventoryData.weapons.forEach((item) => syncInventoryMatch(item, "weapons"));
   const rows = inventoryData.weapons.map((item) => `
-    <section class="inventory-row weapon-row ${isInventoryItemValid(item, "weapons") ? "is-valid" : "is-unmatched"}" data-inventory-type="weapons" data-item-id="${item.id}">
+    <section class="inventory-row weapon-row ${isInventoryItemValid(item, "weapons") ? "is-valid" : "is-unmatched"}${itemCustomFlag(item) ? " is-custom" : ""}" data-inventory-type="weapons" data-item-id="${item.id}">
       ${inventoryNameField("武器名称", "name", item.name)}
       ${inventoryTypeField(item, "weaponType", "weaponDatabaseOptions")}
       ${inventoryDetail("使用技能", "skill", item.skill, item, "weapons")}
@@ -283,7 +301,7 @@ function renderArmorList() {
   }
   inventoryData.armors.forEach((item) => syncInventoryMatch(item, "armors"));
   const rows = inventoryData.armors.map((item) => `
-    <section class="inventory-row armor-row ${isInventoryItemValid(item, "armors") ? "is-valid" : "is-unmatched"}" data-inventory-type="armors" data-item-id="${item.id}">
+    <section class="inventory-row armor-row ${isInventoryItemValid(item, "armors") ? "is-valid" : "is-unmatched"}${itemCustomFlag(item) ? " is-custom" : ""}" data-inventory-type="armors" data-item-id="${item.id}">
       ${inventoryNameField("防具名称", "name", item.name)}
       ${inventoryTypeField(item, "armorType", "armorDatabaseOptions")}
       ${inventoryDetail("护甲值", "armorValue", item.armorValue, item, "armors", "number")}
@@ -311,10 +329,10 @@ function renderOtherItemList() {
   }
   const rows = inventoryData.others.map((item) => `
     <section class="inventory-row other-item-row" data-inventory-type="others" data-item-id="${item.id}">
-      ${inventoryInput("name", item.name, "物品名称")}
-      ${inventoryInput("quantity", item.quantity, "数量", { inputType: "number" })}
-      ${inventorySelect("location", item.location, ["颅", "躯", "服", "上肢", "下肢", "背包", "其他"])}
-      ${inventorySelect("status", item.status, ["显露", "隐藏", "自定义"])}
+      ${inventoryNameField("物品名称", "name", item.name)}
+      ${inventoryDetail("数量", "quantity", item.quantity, item, "others", "number")}
+      ${inventorySelectField("部位", "location", item.location, ["颅", "躯", "服", "上肢", "下肢", "背包", "其他"])}
+      ${inventorySelectField("状态", "status", item.status, ["显露", "隐藏", "自定义"])}
       <button class="inventory-delete" type="button" data-delete-item>删除</button>
     </section>
   `).join("");
@@ -508,8 +526,23 @@ function handleInventoryInput(event) {
   if (!item) return;
   const field = event.target.dataset.itemField;
   if (!field) return;
+  if (type !== "others" && field === getInventoryNameField(type) && event.target.value === "__custom__") {
+    item.isCustom = true;
+    item[field] = "";
+    item.matchedId = "";
+    clearInventoryDetails(item, type);
+    renderInventoryLists();
+    persist();
+    return;
+  }
   item[field] = event.target.value;
+  if (type !== "others" && field === getInventoryNameField(type) && itemCustomFlag(item)) {
+    item.matchedId = "";
+    persist();
+    return;
+  }
   if (type !== "others" && field === getInventoryNameField(type)) {
+    item.isCustom = false;
     const match = findInventoryMatch(type, event.target.value);
     if (match) {
       applyInventoryMatch(item, type, match);

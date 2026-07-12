@@ -3814,3 +3814,570 @@
     height: 260px;
   }
 }
+
+/* Mobile-only polish: keep desktop layout unchanged. */
+@media (max-width: 720px) {
+  .float-toggle,
+  .floating-panel {
+    display: none !important;
+  }
+
+  .toolbar {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .toolbar .status {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-left: 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .toolbar .buttons {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .toolbar button {
+    min-height: 44px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  #imagePage .toolbar .buttons,
+  #finalPage .toolbar .buttons {
+    flex-wrap: wrap;
+  }
+  #attributePage .used-points-inline {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  #attributePage .used-points-inline strong {
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  #attributePage .used-points-inline .compact-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-left: 6px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  #attributePage .used-points-inline .compact-check input {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+  }
+
+  #attributePage .attribute-cell.luck-cell {
+    grid-column: 1 / -1;
+  }
+
+  #attributePage .luck-cell .attr-main {
+    grid-template-columns: minmax(0, 1fr) minmax(180px, auto);
+  }
+
+  #attributePage .luck-cell .attr-value-wrap {
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  #attributePage .luck-cell .random-luck-btn {
+    min-width: 78px;
+  }
+
+  #attributePage .roll-panel-head {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 10px;
+  }
+
+  #attributePage .roll-panel-head strong {
+    white-space: nowrap;
+  }
+
+  #attributePage .roll-actions {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  #attributePage .roll-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+/* Mobile-only attribute page refinements. */
+@media (max-width: 720px) {
+  #attributePage .attribute-cell:not(.luck-cell) .attr-main {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    align-items: start;
+    gap: 6px 8px;
+    padding: 10px;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-title {
+    display: contents;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name strong {
+    font-size: 15px;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name span {
+    font-size: 11px;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name .info-dot {
+    flex: 0 0 14px;
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-value-wrap {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-content: flex-end;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-input {
+    width: 62px;
+    min-height: 40px;
+    font-size: 15px;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-level-note {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  #attributePage .age-adjustment-head {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 8px;
+  }
+
+  #attributePage .age-adjustment-note {
+    flex: 0 1 auto;
+  }
+
+  #attributePage .age-adjustment-actions {
+    justify-content: flex-start;
+  }
+
+  #attributePage .secondary-attribute-head {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 5px;
+  }
+
+  #attributePage .secondary-attribute-head h3 {
+    white-space: nowrap;
+  }
+
+  #attributePage .secondary-attribute-head p {
+    text-align: left;
+    line-height: 1.5;
+  }
+
+  #attributePage .secondary-attribute-item {
+    gap: 6px;
+    padding: 10px;
+  }
+
+  #attributePage .secondary-attribute-item strong.is-empty-value {
+    font-size: 13px;
+  }
+}
+@media (max-width: 720px) {
+  #attributePage .attribute-cell:not(.luck-cell) .attr-main {
+    grid-template-columns: minmax(0, 1fr) 56px;
+    gap: 6px;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name {
+    display: grid;
+    grid-template-columns: max-content max-content 14px;
+    align-items: center;
+    justify-content: start;
+    column-gap: 4px;
+    min-width: 0;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name strong {
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name span:not(.info-dot) {
+    font-size: 10px;
+    letter-spacing: .08em;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-name .info-dot {
+    margin-left: 0;
+    justify-self: center;
+  }
+
+  #attributePage .attribute-cell:not(.luck-cell) .attr-input {
+    width: 56px;
+  }
+
+  #attributePage .roll-text {
+    display: grid;
+    gap: 6px;
+    line-height: 1.55;
+  }
+
+  #attributePage .roll-title,
+  #attributePage .roll-attributes,
+  #attributePage .roll-total {
+    display: block;
+  }
+}
+/* Mobile skill page compact layout */
+@media (max-width: 720px) {
+  #skillPage .skill-summary-bar .skill-credit-control label {
+    color: var(--navy);
+    font-weight: 900;
+  }
+
+  #skillPage .skill-row {
+    padding: 10px;
+    gap: 9px;
+  }
+
+  #skillPage .skill-title {
+    padding-right: 0;
+    min-width: 0;
+  }
+
+  #skillPage .skill-row:has(.skill-talent-toggle) .skill-title {
+    padding-right: 58px;
+  }
+
+  #skillPage .skill-name-line {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  #skillPage .skill-name-line::-webkit-scrollbar {
+    display: none;
+  }
+
+  #skillPage .skill-name-line strong,
+  #skillPage .skill-name-line .skill-info-trigger,
+  #skillPage .skill-name-line .info-dot,
+  #skillPage .skill-name-line .skill-tags,
+  #skillPage .skill-name-line .skill-tag {
+    flex: 0 0 auto;
+  }
+
+  #skillPage .skill-name-line strong {
+    white-space: nowrap;
+    word-break: normal;
+  }
+
+  #skillPage .skill-name-line .skill-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 4px;
+    margin-left: 2px;
+  }
+
+  #skillPage .skill-tag {
+    white-space: nowrap;
+  }
+
+  #skillPage .skill-inputs {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    align-items: stretch;
+  }
+
+  #skillPage .skill-base-box,
+  #skillPage .skill-total-box,
+  #skillPage .skill-inputs label {
+    min-width: 0;
+    min-height: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 5px 3px;
+    grid-template-columns: none;
+    white-space: nowrap;
+  }
+
+  #skillPage .skill-base-box span,
+  #skillPage .skill-total-box span,
+  #skillPage .skill-inputs label {
+    font-size: 11px;
+    line-height: 1.15;
+  }
+
+  #skillPage .skill-base-box strong,
+  #skillPage .skill-total-box strong,
+  #skillPage .skill-inputs label input[type="number"] {
+    width: 100%;
+    max-width: 58px;
+    font-size: 17px;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  #skillPage .skill-inputs label input[type="number"] {
+    min-height: 24px;
+    padding: 0 2px;
+  }
+}
+
+/* Mobile skill summary and talent toggle alignment */
+@media (max-width: 720px) {
+  #skillPage .skill-summary-bar .skill-credit-control,
+  #skillPage .skill-summary-bar .skill-credit-control label,
+  #skillPage .skill-summary-bar .skill-credit-control strong,
+  #skillPage .skill-summary-bar .skill-credit-control .credit-range-text {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: 900;
+    line-height: inherit;
+    letter-spacing: 0;
+    color: var(--navy);
+  }
+
+  #skillPage .skill-summary-bar .skill-credit-control label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  #skillPage .skill-row .skill-talent-toggle {
+    top: 8px;
+    right: 10px;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  #skillPage .skill-row .skill-talent-toggle input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin: 0;
+    padding: 0;
+  }
+}
+/* Mobile inventory cards */
+@media (max-width: 720px) {
+  #itemsPage .inventory-list {
+    overflow: visible;
+    padding: 10px;
+  }
+
+  #itemsPage .inventory-table {
+    display: grid;
+    gap: 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+
+  #itemsPage .inventory-table-head {
+    display: none !important;
+  }
+
+  #itemsPage .item-table .inventory-row {
+    position: relative;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px 54px 12px 12px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #fff;
+  }
+
+  #itemsPage .item-table .inventory-row > label,
+  #itemsPage .item-table .inventory-row > input,
+  #itemsPage .item-table .inventory-row > select,
+  #itemsPage .item-table .inventory-row > button {
+    border-right: 0;
+  }
+
+  #itemsPage .inventory-table .inventory-row .inventory-field > span {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: nowrap;
+  }
+
+  #itemsPage .item-table .inventory-row > .inventory-field {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    padding: 7px 8px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--paper-soft);
+  }
+
+  #itemsPage .item-table .inventory-row > .inventory-name-cell {
+    grid-column: span 1;
+  }
+
+  #itemsPage .item-table .inventory-row > .inventory-field span {
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  #itemsPage .item-table .inventory-row input,
+  #itemsPage .item-table .inventory-row select {
+    width: 100%;
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  #itemsPage .item-table .inventory-row input[readonly] {
+    background: transparent;
+  }
+
+  #itemsPage .item-table .inventory-delete {
+    position: absolute;
+    top: 12px;
+    right: 10px;
+    width: 38px;
+    min-height: 30px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  #itemsPage .item-table .other-item-row {
+    grid-template-columns: minmax(0, 1.25fr) minmax(76px, .75fr);
+  }
+
+  #itemsPage .item-table .other-item-row > .inventory-name-cell {
+    grid-column: 1 / -1;
+  }
+}
+/* Inventory mobile select and delete affordance */
+.inventory-mobile-type-cell {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  #itemsPage .item-table .inventory-row:not(.is-custom) > .inventory-field:has(.inventory-type-input) {
+    display: none !important;
+  }
+
+  #itemsPage .item-table .inventory-row:not(.is-custom) > .inventory-mobile-type-cell {
+    display: grid !important;
+  }
+
+  #itemsPage .item-table .inventory-row {
+    padding-right: 12px;
+  }
+
+  #itemsPage .item-table .inventory-delete {
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    min-height: 26px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--danger);
+    font-size: 0;
+    line-height: 1;
+  }
+
+  #itemsPage .item-table .inventory-delete::before {
+    content: "×";
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+  }
+}
+@media (max-width: 720px) {
+  #itemsPage .item-table .inventory-row.is-custom > .inventory-mobile-type-cell {
+    display: none !important;
+  }
+
+  #itemsPage .item-table .inventory-row.is-custom > .inventory-field:has(.inventory-type-input) {
+    display: grid !important;
+  }
+
+  #itemsPage .item-table .inventory-delete {
+    top: -7px;
+    right: -7px;
+    z-index: 2;
+  }
+}
