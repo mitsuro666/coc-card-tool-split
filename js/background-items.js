@@ -209,15 +209,15 @@ function inventoryDetail(label, field, value, item, type, inputType = "text") {
   })}</label>`;
 }
 
-function inventoryNameField(label, field, value, listId) {
+function inventoryNameField(label, field, value, listId, className = "inventory-name-input") {
   return `<label class="inventory-field inventory-name-cell"><span>${escapeHTML(label)}</span>${inventoryInput(field, value, label, {
     list: listId,
-    className: "inventory-name-input"
+    className
   })}</label>`;
 }
 
 function inventoryTypeField(item, field, listId) {
-  return inventoryNameField("类型", field, item[field] || "", listId);
+  return inventoryNameField("类型", field, item[field] || "", listId, "inventory-name-input inventory-type-input");
 }
 
 function inventorySelect(field, value, options) {
@@ -289,7 +289,6 @@ function renderArmorList() {
       ${inventoryDetail("护甲值", "armorValue", item.armorValue, item, "armors", "number")}
       ${inventoryDetail("MOV惩罚", "movPenalty", item.movPenalty, item, "armors")}
       ${inventoryDetail("覆盖位置", "coverage", item.coverage, item, "armors")}
-      ${inventoryDetail("使用物种", "species", item.species, item, "armors")}
       ${inventoryDetail("防刺器", "special", item.special, item, "armors")}
       ${inventoryDetail("常见时代", "era", item.era, item, "armors")}
       ${inventoryDetail("价格20s/现代", "price", item.price, item, "armors")}
@@ -298,7 +297,7 @@ function renderArmorList() {
   `).join("");
   list.innerHTML = `
     <div class="inventory-table item-table armor-table">
-      ${inventoryTableHeader("armor-row", ["防具名称", "类型", "护甲值", "MOV惩罚", "覆盖位置", "使用物种", "防刺器", "常见时代", "价格20s/现代", ""])}
+      ${inventoryTableHeader("armor-row", ["防具名称", "类型", "护甲值", "MOV惩罚", "覆盖位置", "防刺器", "常见时代", "价格20s/现代", ""])}
       ${rows}
     </div>
   `;
@@ -327,10 +326,18 @@ function renderOtherItemList() {
   `;
 }
 
+function isHumanUsableArmor(item) {
+  const species = String(item && item.species || "").trim();
+  if (!species || species === "——") return false;
+  if (species.includes("大象") || species.includes("深潜者") || species.includes("鳄鱼") || species === "剑") return false;
+  return /人类|五指|双腿|有手/.test(species);
+}
+
 function ensureInventoryDatalists() {
+  const armorOptions = getInventoryDatabase("armors").filter(isHumanUsableArmor);
   const configs = [
     ["weaponDatabaseOptions", getInventoryDatabase("weapons"), "weaponType"],
-    ["armorDatabaseOptions", getInventoryDatabase("armors"), "armorType"],
+    ["armorDatabaseOptions", armorOptions, "armorType"],
     ["vehicleDatabaseOptions", getInventoryDatabase("vehicles"), "vehicleType"]
   ];
   configs.forEach(([id, database, field]) => {
@@ -476,6 +483,22 @@ function restoreBackgroundData(values) {
   });
 }
 
+function handleInventoryTypeFocus(event) {
+  const input = event.target.closest(".inventory-type-input");
+  if (!input || input.readOnly || Object.prototype.hasOwnProperty.call(input.dataset, "restoreValue")) return;
+  const value = input.value;
+  if (!value.trim()) return;
+  input.dataset.restoreValue = value;
+  input.value = "";
+}
+
+function handleInventoryTypeBlur(event) {
+  const input = event.target.closest(".inventory-type-input");
+  if (!input || !Object.prototype.hasOwnProperty.call(input.dataset, "restoreValue")) return;
+  if (!input.value.trim()) input.value = input.dataset.restoreValue;
+  delete input.dataset.restoreValue;
+}
+
 function handleInventoryInput(event) {
   const row = event.target.closest(".inventory-row");
   if (!row) return;
@@ -586,6 +609,8 @@ function initBackgroundItems() {
   ["weaponArmorList", "armorList", "otherItemList"].forEach((id) => {
     const list = $(id);
     if (!list) return;
+    list.addEventListener("focusin", handleInventoryTypeFocus);
+    list.addEventListener("focusout", handleInventoryTypeBlur);
     list.addEventListener("input", handleInventoryInput);
     list.addEventListener("change", handleInventoryInput);
     list.addEventListener("change", handleInventoryCustomChange);

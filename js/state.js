@@ -239,6 +239,7 @@ let customSkillData = [];
     let skillPointData = {};
     let talentSkillIds = [];
     let currentSkillFilter = "all";
+    let detailsState = {};
     let inventoryData = { weapons: [], armors: [], vehicles: [], others: [] };
     let imageData = { avatar: "", portrait: "", custom: [] };
 let ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
@@ -326,18 +327,3 @@ let ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty
     function escapeHTML(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

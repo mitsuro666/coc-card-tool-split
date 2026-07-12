@@ -81,6 +81,24 @@
       const hasLimit = target !== null && target !== undefined && Number.isFinite(Number(target)) && Number(target) > 0;
       el.classList.toggle("is-danger", Boolean(hasLimit && used > Number(target)));
     }
+
+    function getSkillPointLimitState() {
+      const occupation = findSelectedOccupation();
+      const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
+      const careerUsed = getAllSkills().reduce((sum, skill) => {
+        if (!getOccupationTagType(skill) && !isTalentSkill(skill)) return sum;
+        return sum + parsePointValue(getSkillState(skill.id).career);
+      }, 0) + creditUsed;
+      const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0);
+      const careerTarget = occupation ? evaluateOccupationPointFormula(occupation.skillPointFormulaExcel) : null;
+      const interestTarget = (parseAttributeValue("attrINT") || 0) * 2;
+      const careerHasLimit = careerTarget !== null && Number.isFinite(Number(careerTarget)) && Number(careerTarget) > 0;
+      const interestHasLimit = Number.isFinite(Number(interestTarget)) && Number(interestTarget) > 0;
+      return {
+        careerOver: Boolean(careerHasLimit && careerUsed > Number(careerTarget)),
+        interestOver: Boolean(interestHasLimit && interestUsed > Number(interestTarget))
+      };
+    }
     function findSelectedOccupation() {
       const selectedId = occupationIdInput && occupationIdInput.value ? Number(occupationIdInput.value) : null;
       if (selectedId !== null && Number.isFinite(selectedId)) {

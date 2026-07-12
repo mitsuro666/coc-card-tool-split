@@ -1151,14 +1151,14 @@
 
     .inventory-row.weapon-row,
     .inventory-table-head.weapon-row {
-      grid-template-columns: minmax(112px, 1.25fr) minmax(112px, 1.25fr) minmax(72px, .8fr) minmax(82px, .9fr) minmax(68px, .75fr) minmax(46px, .5fr) minmax(46px, .5fr) minmax(54px, .6fr) minmax(54px, .6fr) 44px;
-      min-width: 686px;
+      grid-template-columns: minmax(104px, 1fr) minmax(198px, 2.08fr) minmax(58px, .55fr) minmax(62px, .58fr) minmax(58px, .62fr) minmax(46px, .5fr) minmax(46px, .5fr) minmax(48px, .52fr) minmax(48px, .52fr) 44px;
+      min-width: 704px;
     }
 
     .inventory-row.armor-row,
     .inventory-table-head.armor-row {
-      grid-template-columns: minmax(112px, 1.25fr) minmax(112px, 1.25fr) minmax(58px, .65fr) minmax(66px, .72fr) minmax(88px, .98fr) minmax(78px, .86fr) minmax(58px, .64fr) minmax(82px, .9fr) minmax(92px, 1fr) 44px;
-      min-width: 728px;
+      grid-template-columns: minmax(104px, 1fr) minmax(198px, 2.08fr) minmax(52px, .5fr) minmax(78px, .76fr) minmax(64px, .62fr) minmax(54px, .52fr) minmax(78px, .78fr) minmax(86px, .86fr) 44px;
+      min-width: 766px;
     }
 
     .inventory-row.vehicle-row,
@@ -1224,6 +1224,8 @@
 
     .item-table .inventory-table-head span,
     .item-table .inventory-row > label,
+    .item-table .inventory-row > input,
+    .item-table .inventory-row > select,
     .item-table .inventory-row > button {
       min-width: 0;
       border-right: 1px solid var(--line);
@@ -1233,8 +1235,6 @@
       padding: 6px 7px;
       text-align: center;
     }
-
-    .item-table .inventory-row > label:last-of-type,
     .item-table .inventory-row > button:last-child,
     .item-table .inventory-table-head span:last-child {
       border-right: 0;
@@ -1391,6 +1391,8 @@
 
     .item-table .inventory-table-head span,
     .item-table .inventory-row > label,
+    .item-table .inventory-row > input,
+    .item-table .inventory-row > select,
     .item-table .inventory-row > button {
       min-width: 0;
       border-right: 1px solid var(--line);
@@ -1420,6 +1422,11 @@
       border: 0;
       border-radius: 0;
       background: transparent;
+    }
+
+    .item-table .inventory-row > input,
+    .item-table .inventory-row > select {
+      border-right: 1px solid var(--line);
     }
     .asset-mini-hint {
       padding: 10px 14px 0;
@@ -2347,6 +2354,40 @@
   padding: 14px;
 }
 
+
+#finalPage .final-radar-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+#finalPage .final-radar-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+}
+
+#finalPage .final-radar-card h4 {
+  margin: 0;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--navy);
+  font-size: 13px;
+}
+
+#finalPage .final-radar-card canvas {
+  display: block;
+  width: 100%;
+  height: 240px;
+}
+
+#finalPage .final-note-grid .final-note-item.wide {
+  grid-column: 1 / -1;
+  margin: 0;
+}
 #finalPage .final-note-item {
   padding: 12px 14px;
 }
@@ -2420,7 +2461,8 @@
   #finalPage .final-profile-hero,
   #finalPage .final-note-grid,
   #finalPage .final-inventory-grid,
-  #finalPage .final-custom-images {
+  #finalPage .final-custom-images,
+  #finalPage .final-radar-grid {
     grid-template-columns: 1fr;
   }
 

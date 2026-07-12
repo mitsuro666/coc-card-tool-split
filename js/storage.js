@@ -30,6 +30,7 @@ function collectData() {
     background: collectBackgroundData(),
     inventory: inventoryData,
     images: imageData,
+    detailsState,
     maxUnlockedStep,
     currentPage
   };
@@ -105,6 +106,7 @@ function restore() {
         others: Array.isArray(data.inventory && data.inventory.others) ? data.inventory.others.map((item) => normalizeInventoryItem(item, "others")) : []
       };
       imageData = normalizeImageData(data.images || data.imageData || {});
+      detailsState = data.detailsState && typeof data.detailsState === "object" ? { ...data.detailsState } : {};
       currentPage = stepDefinitions.some((step) => step.page === data.currentPage) ? data.currentPage : "profile";
     } else {
       profileFields.forEach((id) => {
@@ -176,13 +178,30 @@ function restore() {
   }
 }
 
+function getTrackedDetails() {
+  return Array.from(document.querySelectorAll("details[id]")).filter((detail) => !detail.closest(".modal-backdrop"));
+}
+
+function applyDetailsState() {
+  getTrackedDetails().forEach((detail) => {
+    if (!Object.prototype.hasOwnProperty.call(detailsState, detail.id)) return;
+    detail.open = Boolean(detailsState[detail.id]);
+  });
+}
+
+function initDetailsState() {
+  getTrackedDetails().forEach((detail) => {
+    if (!Object.prototype.hasOwnProperty.call(detailsState, detail.id)) {
+      detailsState[detail.id] = Boolean(detail.open);
+    }
+    detail.addEventListener("toggle", () => {
+      detailsState[detail.id] = Boolean(detail.open);
+      persist(true);
+    });
+  });
+  applyDetailsState();
+}
+
 function initStorage() {
   window.addEventListener("beforeunload", () => flushPersist(true));
 }
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-﻿function initApp() {
+function initApp() {
   initModal();
   initInfoNotes();
   initNotes();
@@ -12,6 +12,7 @@
   initStorage();
 
   restore();
+  initDetailsState();
   document.querySelectorAll("[data-skill-filter]").forEach((button) => button.classList.toggle("active", button.dataset.skillFilter === currentSkillFilter));
   renderRollHistory();
 
@@ -22,5 +23,3 @@
 }
 
 initApp();
-
-

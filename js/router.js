@@ -1,4 +1,4 @@
-﻿function renderStepNav() {
+function renderStepNav() {
   const nav = $("progressPill");
   if (!nav) return;
   nav.innerHTML = stepDefinitions.map((step, index) => {
@@ -15,6 +15,52 @@
   }).join("");
 }
 
+function validateProfileStep() {
+  const missing = [];
+  if (!$('investigatorName').value.trim()) missing.push('姓名');
+  if (!$('age').value.trim()) missing.push('年龄');
+  if (!$('occupation').value.trim()) missing.push('职业');
+  if (missing.length) {
+    showStatus('saveStatus', `未填写${missing.join('、')}`, true);
+    openPage('profile', { skipValidation: true });
+    return false;
+  }
+  return true;
+}
+
+function validateAttributeStep() {
+  const missing = attributes
+    .filter((attribute) => parseAttributeValue(attribute.id) === null)
+    .map((attribute) => attribute.name);
+  if (missing.length) {
+    showStatus('attributeStatus', `未填写${missing.join('、')}`, true);
+    openPage('attributes', { skipValidation: true });
+    return false;
+  }
+  return true;
+}
+
+function validateSkillStep() {
+  updateSkillCalculations();
+  const limits = getSkillPointLimitState();
+  if (limits.careerOver || limits.interestOver) {
+    const types = [];
+    if (limits.careerOver) types.push('职业');
+    if (limits.interestOver) types.push('兴趣');
+    showStatus('skillStatus', `使用的${types.join('、')}总点数超过上限，请调整`, true);
+    openPage('skills', { skipValidation: true });
+    return false;
+  }
+  return true;
+}
+
+function validateBeforePage(page) {
+  const targetIndex = getStepIndex(page);
+  if (targetIndex > getStepIndex('profile') && !validateProfileStep()) return false;
+  if (targetIndex > getStepIndex('attributes') && !validateAttributeStep()) return false;
+  if (targetIndex > getStepIndex('skills') && !validateSkillStep()) return false;
+  return true;
+}
 function setVisiblePage(page) {
   $("profilePage").hidden = page !== "profile";
   $("attributePage").hidden = page !== "attributes";
@@ -37,6 +83,11 @@ function openPage(page, options = {}) {
   const stepIndex = Math.max(0, getStepIndex(safePage));
 
   if (stepIndex > maxUnlockedStep && !options.unlock) {
+    renderStepNav();
+    return;
+  }
+
+  if (!options.skipValidation && stepIndex > getStepIndex(currentPage) && !validateBeforePage(safePage)) {
     renderStepNav();
     return;
   }
@@ -78,41 +129,28 @@ function initRouter() {
   });
 
   $("nextBtn").addEventListener("click", () => {
-    const missing = [];
-    if (!$("investigatorName").value.trim()) missing.push("姓名");
-    if (!$("age").value.trim()) missing.push("年龄");
-    if (!$("occupation").value.trim()) missing.push("职业");
-
-    if (missing.length) {
-      showStatus("saveStatus", `未填写${missing.join("、")}`, true);
-      return;
-    }
-
+    if (!validateProfileStep()) return;
     openPage("attributes", { unlock: true });
   });
 
   $("backToProfile").addEventListener("click", () => openPage("profile"));
 
   $("nextAttributesBtn").addEventListener("click", () => {
-    const missing = attributes
-      .filter((attribute) => !$(attribute.id).value.trim())
-      .map((attribute) => attribute.name);
-
-    if (missing.length) {
-      showStatus("attributeStatus", `还缺：${missing.join("、")}。`, true);
-      return;
-    }
-
+    if (!validateAttributeStep()) return;
     openPage("skills", { unlock: true });
   });
 
   $("backToAttributes").addEventListener("click", () => openPage("attributes"));
-  $("nextSkillsBtn").addEventListener("click", () => openPage("items", { unlock: true }));
+  $("nextSkillsBtn").addEventListener("click", () => {
+    if (!validateSkillStep()) return;
+    openPage("items", { unlock: true });
+  });
   $("backToSkills").addEventListener("click", () => openPage("skills"));
   $("nextItemsBtn").addEventListener("click", () => openPage("images", { unlock: true }));
   $("backToItems").addEventListener("click", () => openPage("items"));
   $("skipImagesBtn").addEventListener("click", () => openPage("final", { unlock: true }));
   $("nextImagesBtn").addEventListener("click", () => openPage("final", { unlock: true }));
-  $("backFinalToImages").addEventListener("click", () => openPage("images"));
-  $("backFinalToItems").addEventListener("click", () => openPage("items"));
+  const backFinalToImages = $("backFinalToImages");
+  if (backFinalToImages) backFinalToImages.addEventListener("click", () => openPage("images"));
+  $("backFinalToImagesBottom").addEventListener("click", () => openPage("images"));
 }

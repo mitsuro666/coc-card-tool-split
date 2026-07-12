@@ -226,13 +226,17 @@ function applyAgeAdjustment() {
   setAgeAdjustmentModal("已使用年龄补正", messages);
 }
 
-function revertAgeAdjustmentValues() {
+function revertAgeAdjustmentValues(options = {}) {
+  const preserveRecord = Boolean(options.preserveRecord);
+  const previousState = ageAdjustmentState || { age: "", adjustments: {}, movePenalty: 0, messages: [] };
   const messages = [];
-  Object.entries(ageAdjustmentState && ageAdjustmentState.adjustments || {}).forEach(([id, delta]) => {
+  Object.entries(previousState.adjustments || {}).forEach(([id, delta]) => {
     const actual = applyAttributeDelta(id, -Number(delta));
     if (actual) messages.push(`${getAttributeLabel(id)} ${actual > 0 ? "+" : ""}${actual}`);
   });
-  ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
+  ageAdjustmentState = preserveRecord
+    ? { applied: false, age: previousState.age || "", adjustments: { ...(previousState.adjustments || {}) }, movePenalty: Number(previousState.movePenalty || 0), messages: Array.isArray(previousState.messages) ? previousState.messages.slice() : [] }
+    : { applied: false, age: "", adjustments: {}, movePenalty: 0, messages: [] };
   updateAttributeCalculations();
   updateSkillCalculations();
   updateAgeAdjustmentInfo();
@@ -250,7 +254,7 @@ function handleAgeChangedAfterAdjustment() {
 
 function cancelAgeAdjustment() {
   if (!ageAdjustmentState || !ageAdjustmentState.applied) return;
-  const messages = revertAgeAdjustmentValues();
+  const messages = revertAgeAdjustmentValues({ preserveRecord: true });
   setAgeAdjustmentModal("已取消年龄补正", messages.length ? messages : ["已取消年龄补正。"]);
 }
 function calculateDamageBonusAndBuild(str, siz) {

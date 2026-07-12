@@ -137,11 +137,10 @@ function findCustomImage(row) {
 
 function getFinalSkillItems() {
   if (typeof getAllSkills !== "function" || typeof getSkillTotal !== "function") return [];
-  return getAllSkills().slice().sort(sortPreviewSkills);
-}
-
-function countHighlightedSkills() {
-  return getFinalSkillItems().length;
+  return getAllSkills().slice().sort((a, b) => {
+    const totalDiff = getSkillTotal(b) - getSkillTotal(a);
+    return totalDiff || sortPreviewSkills(a, b);
+  });
 }
 
 function finalText(value, fallback = "未填写") {
@@ -176,6 +175,85 @@ function renderFinalSection(title, body, extraClass = "") {
   `;
 }
 
+
+function drawFinalRadar(canvas, items, options = {}) {
+  if (!canvas || !items.length) return;
+  const cssWidth = Math.max(260, Math.round(canvas.getBoundingClientRect().width || 320));
+  const cssHeight = Math.max(220, Math.round(canvas.getBoundingClientRect().height || 240));
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.round(cssWidth * ratio);
+  canvas.height = Math.round(cssHeight * ratio);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+  const cx = cssWidth / 2;
+  const cy = cssHeight / 2 + 8;
+  const radius = Math.min(cssWidth, cssHeight) * 0.3;
+  const angleStep = Math.PI * 2 / items.length;
+  const pointAt = (index, valueRadius) => {
+    const angle = -Math.PI / 2 + index * angleStep;
+    return { x: cx + Math.cos(angle) * valueRadius, y: cy + Math.sin(angle) * valueRadius };
+  };
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#d6e0ea";
+  for (let step = 1; step <= 5; step += 1) {
+    ctx.beginPath();
+    items.forEach((_, index) => {
+      const point = pointAt(index, radius * step / 5);
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.closePath();
+    ctx.stroke();
+  }
+  items.forEach((item, index) => {
+    const axis = pointAt(index, radius);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(axis.x, axis.y);
+    ctx.stroke();
+    const label = pointAt(index, radius + 30);
+    ctx.fillStyle = "#3f4d5c";
+    ctx.font = "12px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    String(item.label).split("\n").forEach((line, lineIndex, lines) => {
+      ctx.fillText(line, label.x, label.y + (lineIndex - (lines.length - 1) / 2) * 14);
+    });
+  });
+  if (!items.some((item) => item.value > 0)) return;
+  ctx.beginPath();
+  items.forEach((item, index) => {
+    const point = pointAt(index, radius * Math.max(0, Math.min(1, item.value)));
+    if (index === 0) ctx.moveTo(point.x, point.y);
+    else ctx.lineTo(point.x, point.y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = options.fill || "rgba(47, 95, 143, .68)";
+  ctx.strokeStyle = options.stroke || "#2f5f8f";
+  ctx.lineWidth = 2;
+  ctx.fill();
+  ctx.stroke();
+}
+
+function renderFinalRadarCharts() {
+  return renderFinalSection("能力图表", `
+    <div class="final-radar-grid">
+      <div class="final-radar-card"><h4>九宫格属性</h4><canvas id="finalAttributeRadarCanvas" width="320" height="240"></canvas></div>
+      <div class="final-radar-card"><h4>技能倾向</h4><canvas id="finalSkillRadarCanvas" width="320" height="240"></canvas></div>
+    </div>
+  `);
+}
+
+function renderFinalRadarCanvases() {
+  const attributeItems = getRadarAttributes().map((item) => ({ label: item.label, value: Math.max(0, Math.min(1, (parseAttributeValue(item.id) || 0) / 100)) }));
+  const skillRadarValues = typeof calculateSkillRadarValues === "function" ? calculateSkillRadarValues() : [];
+  const maxSkillRatio = Math.max(...skillRadarValues.map((entry) => entry.ratio), 0);
+  const skillAxisMax = maxSkillRatio > 0 ? Math.max(0.2, Math.ceil(maxSkillRatio * 10) / 10) : 1;
+  const skillItems = skillRadarValues.map((item) => ({ label: item.label, value: Math.min(1, item.ratio / skillAxisMax) }));
+  drawFinalRadar($("finalAttributeRadarCanvas"), attributeItems, { fill: "rgba(47, 95, 143, .68)", stroke: "#2f5f8f" });
+  drawFinalRadar($("finalSkillRadarCanvas"), skillItems, { fill: "rgba(80, 145, 199, .72)", stroke: "#2f6fa7" });
+}
 function getSkillPointSummary() {
   const selectedOccupation = findSelectedOccupation();
   const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
@@ -186,8 +264,7 @@ function getSkillPointSummary() {
   return [
     { label: "职业点数", value: `${careerUsed} / ${careerTarget === null ? "未计算" : careerTarget}` },
     { label: "兴趣点数", value: `${interestUsed} / ${interestTarget || "未计算"}` },
-    { label: "信用评级", value: String(getCreditRatingNumber()) },
-    { label: "技能总数", value: String(countHighlightedSkills()) }
+    { label: "信用评级", value: String(getCreditRatingNumber()) }
   ];
 }
 
@@ -207,7 +284,7 @@ function renderFinalBackground() {
     const text = finalText($(field.id) ? $(field.id).value : "", "未填写");
     const key = $(field.id + "Key") && $(field.id + "Key").checked ? "关键" : "";
     return `
-      <div class="final-note-item">
+      <div class="final-note-item${field.id === "backgroundExtra" ? " wide" : ""}">
         <strong>${escapeHTML(field.label)}${key ? `<em>${key}</em>` : ""}</strong>
         <p>${escapeHTML(text)}</p>
       </div>
@@ -224,6 +301,19 @@ function renderFinalInventoryList(items, emptyText, labelGetter, valueGetter, ty
   `).join("")}</div>`;
 }
 
+function renderFinalEquipmentList() {
+  const weapons = (inventoryData.weapons || [])
+    .filter((item) => isInventoryItemValid(item, "weapons"))
+    .map((item) => ({ name: item.name, value: item.damage || item.skill || item.attacks }));
+  const armors = (inventoryData.armors || [])
+    .filter((item) => isInventoryItemValid(item, "armors"))
+    .map((item) => ({ name: item.name, value: item.armorValue ? `护甲值 ${item.armorValue}` : item.coverage }));
+  const items = [...weapons, ...armors];
+  if (!items.length) return `<div class="final-empty">暂未添加武器防具。</div>`;
+  return `<div class="final-item-list">${items.map((item) => `
+    <div><span>${escapeHTML(finalText(item.name, "未命名"))}</span><strong>${escapeHTML(finalText(item.value, "—"))}</strong></div>
+  `).join("")}</div>`;
+}
 function renderFinalCustomImages() {
   const customImages = imageData.custom.filter((item) => item.dataUrl || item.name.trim());
   if (!customImages.length) return "";
@@ -285,17 +375,17 @@ function renderFinalSummary() {
     ${renderFinalSection("属性", `<div class="final-readonly-grid attributes">${renderFinalPairs(attributeItems)}</div>`)}
     ${renderFinalSection("次要属性", `<div class="final-readonly-grid secondary-values">${renderFinalPairs(secondaryItems)}</div>`)}
     ${renderFinalSection("技能点数", `<div class="final-readonly-grid skill-points">${renderFinalPairs(getSkillPointSummary())}</div>${renderFinalSkills()}`)}
+    ${renderFinalRadarCharts()}
     ${renderFinalSection("资产情况", `<div class="final-readonly-grid assets">${renderFinalPairs(assetItems)}</div><div class="final-note-item wide"><strong>生活评价</strong><p>${escapeHTML(lifestyle.note)}</p></div>`)}
     ${renderFinalSection("背景故事", renderFinalBackground())}
     ${renderFinalSection("随身物品", `
       <div class="final-inventory-grid">
-        <section><h4>武器</h4>${renderFinalInventoryList(inventoryData.weapons || [], "暂未添加武器。", (item) => item.name || item.weaponType, (item) => item.damage || item.skill || item.attacks, "weapons")}</section>
-        <section><h4>防具</h4>${renderFinalInventoryList(inventoryData.armors || [], "暂未添加防具。", (item) => item.armorType, (item) => item.armorValue || item.coverage, "armors")}</section>
-        <section><h4>载具</h4>${renderFinalInventoryList(inventoryData.vehicles || [], "暂未添加载具。", (item) => item.vehicleType, (item) => item.mov || item.skill, "vehicles")}</section>
-        <section><h4>其他物品</h4>${renderFinalInventoryList(inventoryData.others || [], "暂未添加其他物品。", (item) => item.name, (item) => item.quantity || "1")}</section>
+        <section><h4>武器防具</h4>${renderFinalEquipmentList()}</section>
+        <section><h4>随身物品</h4>${renderFinalInventoryList(inventoryData.others || [], "暂未添加随身物品。", (item) => item.name, (item) => item.quantity || "1")}</section>
       </div>
     `)}
   `;
+  renderFinalRadarCanvases();
 }
 function initImages() {
   imageData = normalizeImageData(imageData);
