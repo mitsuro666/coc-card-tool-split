@@ -151,7 +151,7 @@ function finalText(value, fallback = "未填写") {
 function renderFinalImage(src, label, className = "") {
   return `
     <figure class="final-image ${className}">
-      <div>${src ? `<img src="${src}" alt="${escapeHTML(label)}" />` : `<span>${escapeHTML(label)}未上传</span>`}</div>
+      <div>${src ? `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="${escapeHTML(label)}" /></a>` : `<span>${escapeHTML(label)}未上传</span>`}</div>
       <figcaption>${escapeHTML(label)}</figcaption>
     </figure>
   `;
@@ -253,6 +253,88 @@ function renderFinalRadarCanvases() {
   const skillItems = skillRadarValues.map((item) => ({ label: item.label, value: Math.min(1, item.ratio / skillAxisMax) }));
   drawFinalRadar($("finalAttributeRadarCanvas"), attributeItems, { fill: "rgba(47, 95, 143, .68)", stroke: "#2f5f8f" });
   drawFinalRadar($("finalSkillRadarCanvas"), skillItems, { fill: "rgba(80, 145, 199, .72)", stroke: "#2f6fa7" });
+}
+function getFinalTemplateValue(value) {
+  const text = String(value ?? "").trim();
+  return text ? text : "0";
+}
+
+function getSkillTemplateName(skill) {
+  const displayName = String(getSkillDisplayName(skill) || skill.name || "").trim();
+  const specializedName = displayName.includes("：") ? displayName.split("：").pop() : displayName.split(":").pop();
+  return String(specializedName || displayName)
+    .replace(/\s+/g, "")
+    .replace(/[：:]/g, "");
+}
+
+function generateSkillInputTemplate() {
+  const attributeAliases = [
+    { id: "attrSTR", name: "力量", alias: "str" },
+    { id: "attrDEX", name: "敏捷", alias: "dex" },
+    { id: "attrPOW", name: "意志", alias: "pow" },
+    { id: "attrCON", name: "体质", alias: "con" },
+    { id: "attrAPP", name: "外貌", alias: "app" },
+    { id: "attrEDU", name: "教育", alias: "edu" },
+    { id: "attrSIZ", name: "体型", alias: "siz" },
+    { id: "attrINT", name: "智力", alias: "int" },
+    { id: "attrLuck", name: "幸运", alias: "luck" }
+  ];
+  const secondaryItems = calculateSecondaryAttributes();
+  const getSecondaryValue = (key) => {
+    const item = secondaryItems.find((entry) => entry.key === key);
+    return item ? formatDerivedValue(item.value) : "0";
+  };
+  const parts = [".st "];
+  attributeAliases.forEach((attribute) => {
+    const value = getFinalTemplateValue(parseAttributeValue(attribute.id));
+    parts.push(`${attribute.name}${value}${attribute.alias}${value}`);
+  });
+  const san = getFinalTemplateValue(getSecondaryValue("san"));
+  const mp = getFinalTemplateValue(getSecondaryValue("mp"));
+  const hp = getFinalTemplateValue(getSecondaryValue("hp"));
+  parts.push(`理智${san}san${san}`);
+  parts.push(`魔法${mp}mp${mp}`);
+  parts.push(`体力${hp}hp${hp}`);
+  parts.push(`信用评级${getFinalTemplateValue(getCreditRatingNumber())}`);
+  getFinalSkillItems().forEach((skill) => {
+    const name = getSkillTemplateName(skill);
+    if (!name || name === "信用评级") return;
+    parts.push(`${name}${getSkillTotal(skill)}`);
+  });
+  return parts.join("");
+}
+
+function renderSkillInputTemplate() {
+  const template = generateSkillInputTemplate();
+  return renderFinalSection("技能录入模板", `
+    <div class="final-template-box">
+      <textarea id="skillInputTemplateText" readonly>${escapeHTML(template)}</textarea>
+      <button class="secondary" type="button" id="copySkillInputTemplate">复制</button>
+    </div>
+  `);
+}
+
+function copySkillInputTemplate() {
+  const field = $("skillInputTemplateText");
+  if (!field) return;
+  const text = field.value;
+  const done = () => showStatus("finalStatus", "技能录入模板已复制。");
+  const fail = () => {
+    field.focus();
+    field.select();
+    showStatus("finalStatus", "无法自动复制，请手动复制文本。", true);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fail);
+    return;
+  }
+  try {
+    field.focus();
+    field.select();
+    document.execCommand("copy") ? done() : fail();
+  } catch (error) {
+    fail();
+  }
 }
 function getSkillPointSummary() {
   const selectedOccupation = findSelectedOccupation();
@@ -375,17 +457,114 @@ function renderFinalSummary() {
     ${renderFinalSection("属性", `<div class="final-readonly-grid attributes">${renderFinalPairs(attributeItems)}</div>`)}
     ${renderFinalSection("次要属性", `<div class="final-readonly-grid secondary-values">${renderFinalPairs(secondaryItems)}</div>`)}
     ${renderFinalSection("技能点数", `<div class="final-readonly-grid skill-points">${renderFinalPairs(getSkillPointSummary())}</div>${renderFinalSkills()}`)}
+    ${renderSkillInputTemplate()}
     ${renderFinalRadarCharts()}
     ${renderFinalSection("资产情况", `<div class="final-readonly-grid assets">${renderFinalPairs(assetItems)}</div><div class="final-note-item wide"><strong>生活评价</strong><p>${escapeHTML(lifestyle.note)}</p></div>`)}
     ${renderFinalSection("背景故事", renderFinalBackground())}
     ${renderFinalSection("随身物品", `
       <div class="final-inventory-grid">
         <section><h4>武器防具</h4>${renderFinalEquipmentList()}</section>
-        <section><h4>随身物品</h4>${renderFinalInventoryList(inventoryData.others || [], "暂未添加随身物品。", (item) => item.name, (item) => item.quantity || "1")}</section>
+        <section><h4>其他物品</h4>${renderFinalInventoryList(inventoryData.others || [], "暂未添加其他物品。", (item) => item.name, (item) => item.quantity || "1")}</section>
       </div>
     `)}
   `;
   renderFinalRadarCanvases();
+  const copyTemplateButton = $("copySkillInputTemplate");
+  if (copyTemplateButton) copyTemplateButton.addEventListener("click", copySkillInputTemplate);
+}
+function convertFinalCanvasesForExport(clone) {
+  clone.querySelectorAll("canvas").forEach((canvas) => {
+    const source = canvas.id ? $(canvas.id) : null;
+    if (!source || !source.toDataURL) return;
+    const image = document.createElement("img");
+    image.src = source.toDataURL("image/png");
+    image.alt = canvas.getAttribute("aria-label") || "图表";
+    image.className = "export-radar-image";
+    canvas.replaceWith(image);
+  });
+}
+
+function buildFinalExportHtml(content) {
+  const title = finalText($("investigatorName").value, "调查员角色卡");
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>${escapeHTML(title)} - COC角色卡</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; color: #082b4f; background: #eef3f8; font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; }
+  .export-shell { max-width: 960px; margin: 0 auto; }
+  .export-toolbar { position: sticky; top: 0; z-index: 5; display: flex; gap: 10px; justify-content: flex-end; padding: 10px 0 16px; background: #eef3f8; }
+  .export-toolbar button { border: 0; border-radius: 10px; padding: 9px 14px; background: #2f5f8f; color: #fff; font-weight: 800; cursor: pointer; }
+  .export-toolbar button.secondary { background: #dfeaf4; color: #082b4f; }
+  h1 { margin: 0 0 14px; font-size: 24px; }
+  .export-card { display: grid; gap: 14px; padding: 20px; border: 1px solid #cfdceb; border-radius: 16px; background: #fff; }
+  .final-profile-hero, .final-main-images, .final-readonly-grid, .final-skill-grid, .final-note-grid, .final-inventory-grid, .final-custom-images, .final-radar-grid, .final-template-box { display: grid; gap: 10px; }
+  .final-profile-hero { grid-template-columns: 300px minmax(0, 1fr); align-items: stretch; }
+  .final-main-images, .final-note-grid, .final-inventory-grid, .final-radar-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .final-main-images { align-self: stretch; margin-top: 10px; }
+  .final-custom-images { grid-template-columns: repeat(auto-fill, minmax(120px, 160px)); }
+  .final-readonly-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .final-skill-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .final-section, .final-main-images, .final-note-item, .final-inventory-grid section, .final-radar-card, .final-image { border: 1px solid #d6e0ea; border-radius: 12px; background: #fbfdff; overflow: hidden; }
+  .final-section h3, .final-radar-card h4 { margin: 0; padding: 9px 11px; border-bottom: 1px solid #d6e0ea; font-size: 15px; }
+  .final-readonly-cell, .final-skill-item, .final-item-list div { padding: 9px 10px; border: 1px solid #d6e0ea; border-radius: 10px; background: #fff; }
+  .final-readonly-cell span, .final-skill-item span, .final-item-list span { color: #66788a; font-size: 13px; }
+  .final-readonly-cell strong, .final-skill-item strong, .final-item-list strong { display: block; margin-top: 3px; color: #082b4f; font-size: 14px; }
+  .final-skill-item, .final-item-list div { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+  .final-note-grid, .final-inventory-grid, .final-custom-images, .final-radar-grid, .final-template-box, .final-readonly-grid, .final-skill-grid { padding: 14px; }
+  .final-note-item { padding: 12px 14px; }
+  .final-note-item.wide { grid-column: 1 / -1; }
+  .final-section > .final-note-item.wide { border: 0; border-top: 1px solid #d6e0ea; border-radius: 0; margin: 0; background: transparent; }
+  .final-note-item strong, .final-inventory-grid h4 { display: block; margin: 0 0 8px; color: #082b4f; font-size: 13px; font-weight: 800; }
+  .final-note-item p { margin: 0; white-space: pre-wrap; line-height: 1.7; color: #52677c; font-size: 13px; }
+  .final-item-list { display: grid; gap: 8px; }
+  .final-inventory-grid section { padding: 14px; }
+  .final-inventory-grid .final-item-list div { min-height: 42px; padding: 9px 12px; }
+  .final-item-list span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .final-item-list strong { flex: 0 0 auto; white-space: nowrap; }
+  .final-image { display: grid; grid-template-rows: minmax(220px, 1fr) auto; margin: 0; }
+  .final-image div, .final-image a { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; background: #f4f8fc; }
+  .final-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .final-image figcaption { padding: 7px 9px; border-top: 1px solid #d6e0ea; text-align: center; font-size: 12px; color: #66788a; }
+  .export-radar-image { display: block; width: 100%; max-height: 240px; object-fit: contain; background: #fff; }
+  .final-template-box { grid-template-columns: minmax(0, 1fr); }
+  .final-template-box textarea { width: 100%; min-height: 96px; border: 1px solid #d6e0ea; border-radius: 10px; padding: 10px; color: #082b4f; font: 13px/1.55 "Microsoft YaHei", Arial, sans-serif; }
+  .final-template-box button { display: none; }
+  .final-empty { padding: 12px; color: #66788a; }
+  @media print { body { padding: 0; background: #fff; } .export-toolbar { display: none; } .export-card { border: 0; border-radius: 0; padding: 0; } .final-section, .final-main-images, .final-note-item, .final-inventory-grid section, .final-radar-card, .final-image { break-inside: avoid; } }
+  @media (max-width: 720px) { body { padding: 12px; } .final-profile-hero, .final-main-images, .final-note-grid, .final-inventory-grid, .final-radar-grid { grid-template-columns: 1fr; } .final-readonly-grid, .final-skill-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+</style>
+</head>
+<body>
+  <div class="export-shell">
+    <div class="export-toolbar">
+      <button class="secondary" type="button" onclick="document.querySelector('.export-card').focus(); document.execCommand('selectAll');">全选</button>
+      <button type="button" onclick="window.print();">打印 / 另存为PDF</button>
+    </div>
+    <h1>${escapeHTML(title)} · COC角色卡</h1>
+    <main class="export-card" contenteditable="true">${content}</main>
+  </div>
+</body>
+</html>`;
+}
+
+function openFinalExportPreview() {
+  renderFinalSummary();
+  const summary = $("finalSummary");
+  if (!summary) return;
+  const clone = summary.cloneNode(true);
+  convertFinalCanvasesForExport(clone);
+  const exportWindow = window.open("", "_blank");
+  if (!exportWindow) {
+    showStatus("finalStatus", "浏览器阻止了新窗口，请允许弹窗后重试。", true);
+    return;
+  }
+  exportWindow.document.open();
+  exportWindow.document.write(buildFinalExportHtml(clone.innerHTML));
+  exportWindow.document.close();
+  showStatus("finalStatus", "已生成保存版预览，可打印为PDF或复制到Word。 ");
 }
 function initImages() {
   imageData = normalizeImageData(imageData);
@@ -455,6 +634,9 @@ function initImages() {
     persist();
     showStatus("imageStatus", "已添加自定义图片。填写名称后可上传图片。");
   });
+
+  const exportFinalDocBtn = $("exportFinalDocBtn");
+  if (exportFinalDocBtn) exportFinalDocBtn.addEventListener("click", openFinalExportPreview);
 
   $("resetImagesBtn").addEventListener("click", () => {
     if (!confirm("确定清空头像立绘页的内容吗？")) return;
