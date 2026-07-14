@@ -223,7 +223,7 @@ let customSkillData = [];
       { page: "profile", label: "基础信息" },
       { page: "attributes", label: "属性购点" },
       { page: "skills", label: "技能加点" },
-      { page: "items", label: "背景&物品" },
+      { page: "items", label: "背景物品" },
       { page: "images", label: "头像立绘" },
       { page: "final", label: "角色生成" }
     ];

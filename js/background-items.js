@@ -226,13 +226,9 @@ function inventoryTypeOptionValues(field, currentValue) {
   return unique;
 }
 
-function inventoryTypeSelectField(item, label, field, value) {
-  const options = inventoryTypeOptionValues(field, value);
-  return `<label class="inventory-field inventory-mobile-type-cell"><span>${escapeHTML(label)}</span><select class="inventory-mobile-type-select" data-item-field="${field}"><option value="__custom__" ${itemCustomFlag(item) ? "selected" : ""}>\u81ea\u5b9a\u4e49</option><option value="">\u8bf7\u9009\u62e9</option>${options.map((option) => `<option value="${escapeHTML(option)}" ${!itemCustomFlag(item) && String(value || "") === option ? "selected" : ""}>${escapeHTML(option)}</option>`).join("")}</select></label>`;
-}
-
-function inventoryTypeField(item, field, listId) {
-  return inventoryNameField("\u7c7b\u578b", field, item[field] || "", listId, "inventory-name-input inventory-type-input") + inventoryTypeSelectField(item, "\u7c7b\u578b", field, item[field] || "");
+function inventoryTypeField(item, field) {
+  const readonly = itemCustomFlag(item) ? "" : "readonly";
+  return `<label class="inventory-field inventory-type-cell"><span>类型</span><div class="inventory-type-control"><input class="inventory-name-input inventory-type-input" data-item-field="${field}" type="text" autocomplete="off" value="${escapeHTML(item[field] || "")}" ${readonly} /><button class="inventory-type-picker-btn" type="button" data-open-type-picker aria-label="选择类型">\u25BE</button></div></label>`;
 }
 
 function inventorySelect(field, value, options) {
@@ -274,7 +270,7 @@ function renderWeaponList() {
   const rows = inventoryData.weapons.map((item) => `
     <section class="inventory-row weapon-row ${isInventoryItemValid(item, "weapons") ? "is-valid" : "is-unmatched"}${itemCustomFlag(item) ? " is-custom" : ""}" data-inventory-type="weapons" data-item-id="${item.id}">
       ${inventoryNameField("武器名称", "name", item.name)}
-      ${inventoryTypeField(item, "weaponType", "weaponDatabaseOptions")}
+      ${inventoryTypeField(item, "weaponType")}
       ${inventoryDetail("使用技能", "skill", item.skill, item, "weapons")}
       ${inventoryDetail("伤害", "damage", item.damage, item, "weapons")}
       ${inventoryDetail("基础射程", "range", item.range, item, "weapons")}
@@ -303,7 +299,7 @@ function renderArmorList() {
   const rows = inventoryData.armors.map((item) => `
     <section class="inventory-row armor-row ${isInventoryItemValid(item, "armors") ? "is-valid" : "is-unmatched"}${itemCustomFlag(item) ? " is-custom" : ""}" data-inventory-type="armors" data-item-id="${item.id}">
       ${inventoryNameField("防具名称", "name", item.name)}
-      ${inventoryTypeField(item, "armorType", "armorDatabaseOptions")}
+      ${inventoryTypeField(item, "armorType")}
       ${inventoryDetail("护甲值", "armorValue", item.armorValue, item, "armors", "number")}
       ${inventoryDetail("MOV惩罚", "movPenalty", item.movPenalty, item, "armors")}
       ${inventoryDetail("覆盖位置", "coverage", item.coverage, item, "armors")}
@@ -456,7 +452,7 @@ function updateAssetCalculations() {
   const otherAssetsValue = typeof money.otherAssets === "number" ? money.otherAssets : 0;
   const manualTotal = getOtherAssetManualTotal();
   const remaining = otherAssetsValue - manualTotal;
-  $("assetCreditDisplay").textContent = `${cr}%/${Math.floor(cr / 2)}%/${Math.floor(cr / 5)}%`;
+  $("assetCreditDisplay").textContent = String(cr);
   $("assetLifestyleDisplay").textContent = lifestyle.level;
   $("assetSpendingDisplay").textContent = formatAssetAmount(money.spending);
   $("assetOtherDisplay").textContent = formatAssetAmount(money.otherAssets);
@@ -501,6 +497,98 @@ function restoreBackgroundData(values) {
   });
 }
 
+function getInventoryTypePicker() {
+  let picker = $("inventoryTypePicker");
+  if (picker) return picker;
+  picker = document.createElement("div");
+  picker.id = "inventoryTypePicker";
+  picker.className = "inventory-type-picker";
+  picker.hidden = true;
+  document.body.appendChild(picker);
+  return picker;
+}
+
+function closeInventoryTypePicker() {
+  const picker = $("inventoryTypePicker");
+  if (picker) picker.hidden = true;
+}
+
+function openInventoryTypePicker(row) {
+  if (!row) return;
+  const type = row.dataset.inventoryType;
+  if (!["weapons", "armors"].includes(type)) return;
+  const collection = inventoryData[type];
+  const item = collection && collection.find((entry) => entry.id === row.dataset.itemId);
+  if (!item) return;
+  const field = getInventoryNameField(type);
+  const picker = getInventoryTypePicker();
+  const options = inventoryTypeOptionValues(field, item[field]);
+  picker.dataset.inventoryType = type;
+  picker.dataset.itemId = item.id;
+  picker.innerHTML = `
+    <div class="inventory-type-picker-card" role="dialog" aria-label="选择类型">
+      <div class="inventory-type-picker-head"><strong>选择类型</strong><button type="button" data-close-type-picker>关闭</button></div>
+      <div class="inventory-type-picker-search"><input type="search" data-type-picker-search placeholder="搜索类型" autocomplete="off" /></div>
+      <div class="inventory-type-picker-list">
+        <button type="button" data-type-option="__custom__" data-type-label="自定义">自定义</button>
+        ${options.map((option) => `<button type="button" data-type-option="${escapeHTML(option)}" data-type-label="${escapeHTML(option)}">${escapeHTML(option)}</button>`).join("")}
+      </div>
+    </div>
+  `;
+  picker.hidden = false;
+}
+
+function applyInventoryTypeChoice(type, itemId, value) {
+  const collection = inventoryData[type];
+  const item = collection && collection.find((entry) => entry.id === itemId);
+  if (!item) return;
+  const field = getInventoryNameField(type);
+  if (value === "__custom__") {
+    item.isCustom = true;
+    item.matchedId = "";
+    item[field] = "";
+    clearInventoryDetails(item, type);
+  } else {
+    item.isCustom = false;
+    item[field] = value;
+    applyInventoryMatch(item, type, findInventoryMatch(type, value));
+  }
+  closeInventoryTypePicker();
+  renderInventoryLists();
+  persist();
+}
+
+function handleInventoryTypePickerSearch(event) {
+  const input = event.target.closest("[data-type-picker-search]");
+  if (!input) return;
+  const keyword = input.value.trim().toLowerCase();
+  const picker = input.closest(".inventory-type-picker");
+  picker.querySelectorAll("[data-type-option]").forEach((button) => {
+    if (button.dataset.typeOption === "__custom__") {
+      button.hidden = false;
+      return;
+    }
+    const text = String(button.dataset.typeLabel || button.textContent || "").toLowerCase();
+    button.hidden = Boolean(keyword && !text.includes(keyword));
+  });
+}
+function handleInventoryTypePickerClick(event) {
+  handleInventoryTypePickerSearch(event);
+  const openButton = event.target.closest("[data-open-type-picker]");
+  if (openButton) {
+    openInventoryTypePicker(openButton.closest(".inventory-row"));
+    return;
+  }
+  const closeButton = event.target.closest("[data-close-type-picker]");
+  if (closeButton || event.target.id === "inventoryTypePicker") {
+    closeInventoryTypePicker();
+    return;
+  }
+  const optionButton = event.target.closest("[data-type-option]");
+  if (!optionButton) return;
+  const picker = $("inventoryTypePicker");
+  applyInventoryTypeChoice(picker.dataset.inventoryType, picker.dataset.itemId, optionButton.dataset.typeOption);
+}
 function handleInventoryTypeFocus(event) {
   const input = event.target.closest(".inventory-type-input");
   if (!input || input.readOnly || Object.prototype.hasOwnProperty.call(input.dataset, "restoreValue")) return;
@@ -526,22 +614,15 @@ function handleInventoryInput(event) {
   if (!item) return;
   const field = event.target.dataset.itemField;
   if (!field) return;
-  if (type !== "others" && field === getInventoryNameField(type) && event.target.value === "__custom__") {
-    item.isCustom = true;
-    item[field] = "";
-    item.matchedId = "";
-    clearInventoryDetails(item, type);
-    renderInventoryLists();
-    persist();
-    return;
-  }
+  const isTypeField = type !== "others" && field === getInventoryNameField(type);
   item[field] = event.target.value;
-  if (type !== "others" && field === getInventoryNameField(type) && itemCustomFlag(item)) {
+  if (isTypeField && itemCustomFlag(item)) {
     item.matchedId = "";
     persist();
     return;
   }
-  if (type !== "others" && field === getInventoryNameField(type)) {
+
+  if (isTypeField) {
     item.isCustom = false;
     const match = findInventoryMatch(type, event.target.value);
     if (match) {
@@ -592,7 +673,7 @@ function initBackgroundItems() {
   ensureInventoryDatalists();
 
   $("resetItemsBtn").addEventListener("click", () => {
-    if (!confirm("确定清空背景&物品页的内容吗？")) return;
+    if (!confirm("确定清空背景物品页的内容吗？")) return;
     assetFieldIds.forEach((id) => {
       const el = $(id);
       if (el) el.value = "";
@@ -642,11 +723,11 @@ function initBackgroundItems() {
   ["weaponArmorList", "armorList", "otherItemList"].forEach((id) => {
     const list = $(id);
     if (!list) return;
-    list.addEventListener("focusin", handleInventoryTypeFocus);
-    list.addEventListener("focusout", handleInventoryTypeBlur);
     list.addEventListener("input", handleInventoryInput);
     list.addEventListener("change", handleInventoryInput);
     list.addEventListener("change", handleInventoryCustomChange);
     list.addEventListener("click", handleInventoryDelete);
   });
+  document.addEventListener("click", handleInventoryTypePickerClick);
+  document.addEventListener("input", handleInventoryTypePickerSearch);
 }

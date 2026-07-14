@@ -313,7 +313,7 @@
         <div class="status" id="skillStatus">技能会自动保存，合计值实时计算。</div>
         <div class="buttons">
           <button class="secondary" type="button" id="backToAttributes">← 上一步：属性购点</button>
-          <button type="button" id="nextSkillsBtn">下一步：背景&物品 →</button>
+          <button type="button" id="nextSkillsBtn">下一步：背景物品 →</button>
         </div>
       </section>
     </section>
@@ -321,7 +321,7 @@
     <section class="page" id="itemsPage" hidden>
       <section class="card">
         <div class="card-header with-actions">
-          <h2>背景&物品</h2>
+          <h2>背景物品</h2>
           <button class="header-reset" type="button" id="resetItemsBtn">清空本页</button>
         </div>
 
@@ -330,7 +330,7 @@
             <summary>资产与现金</summary>
             <section class="asset-section">
             <div class="asset-summary-grid" aria-label="资产与现金">
-              <div class="asset-summary-cell"><span>信用评级</span><strong id="assetCreditDisplay">0%/0%/0%</strong></div>
+              <div class="asset-summary-cell"><span>信用评级</span><strong id="assetCreditDisplay">0</strong></div>
               <div class="asset-summary-cell"><span>生活水平</span><strong id="assetLifestyleDisplay">身无分文</strong></div>
               <div class="asset-summary-cell"><span>消费水平</span><strong id="assetSpendingDisplay">0.5</strong></div>
               <div class="asset-summary-cell"><span>其他资产</span><strong id="assetOtherDisplay">没有</strong></div>
@@ -474,7 +474,7 @@
       <section class="toolbar">
         <div class="status" id="imageStatus">上传后会自动保存。</div>
         <div class="buttons">
-          <button class="secondary" type="button" id="backToItems">← 上一步：背景&物品</button>
+          <button class="secondary" type="button" id="backToItems">← 上一步：背景物品</button>
           <button class="ghost" type="button" id="skipImagesBtn">跳过</button>
           <button type="button" id="nextImagesBtn">下一步：角色生成 →</button>
         </div>
@@ -614,6 +614,18 @@
   <script src="js/storage.js"></script>
   <script src="js/router.js"></script>
   <script src="js/notes.js"></script>
-  <script src="js/app.js"></script>
-</body>
+  <script src="js/app.js"></script>  <script>
+    (() => {
+      const fixItemsStepLabel = () => {
+        document.querySelectorAll('[data-step-page="items"] .step-name').forEach((el) => {
+          if (el.textContent !== '背景物品') el.textContent = '背景物品';
+        });
+      };
+      document.addEventListener('DOMContentLoaded', () => {
+        fixItemsStepLabel();
+        const nav = document.getElementById('progressPill');
+        if (nav) new MutationObserver(fixItemsStepLabel).observe(nav, { childList: true, subtree: true, characterData: true });
+      });
+    })();
+  </script></body>
 </html>

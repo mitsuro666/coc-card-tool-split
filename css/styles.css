@@ -435,14 +435,14 @@
     }
 
     .preview-section summary::after {
-      content: "展开";
+      content: "\00D7";
       color: var(--muted);
       font-size: 12px;
       letter-spacing: 0;
     }
 
     .preview-section[open] summary::after {
-      content: "收起";
+      content: "\00D7";
     }
 
     .preview-skill-list {
@@ -1021,15 +1021,16 @@
     }
 
     .collapse-section summary::after {
-      content: "展开";
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
+      content: "\25BE";
+      color: var(--navy);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
       letter-spacing: 0;
     }
 
     .collapse-section[open] summary::after {
-      content: "收起";
+      content: "\25B4";
     }
 
     .background-grid {
@@ -1151,7 +1152,7 @@
 
     .inventory-row.weapon-row,
     .inventory-table-head.weapon-row {
-      grid-template-columns: minmax(104px, 1fr) minmax(198px, 2.08fr) minmax(58px, .55fr) minmax(62px, .58fr) minmax(58px, .62fr) minmax(46px, .5fr) minmax(46px, .5fr) minmax(48px, .52fr) minmax(48px, .52fr) 44px;
+      grid-template-columns: minmax(104px, 1fr) minmax(198px, 2.08fr) minmax(58px, .55fr) minmax(76px, .72fr) minmax(58px, .62fr) minmax(36px, .38fr) minmax(46px, .5fr) minmax(48px, .52fr) minmax(48px, .52fr) 44px;
       min-width: 704px;
     }
 
@@ -3295,7 +3296,7 @@
 }
 
 #attributePage .attribute-radar-panel summary::after {
-  content: "展开";
+  content: "\00D7";
   margin-left: auto;
   color: var(--muted);
   font-size: 12px;
@@ -3303,7 +3304,7 @@
 }
 
 #attributePage .attribute-radar-panel[open] summary::after {
-  content: "收起";
+  content: "\00D7";
 }
 
 #attributePage .attribute-radar-body {
@@ -3786,14 +3787,14 @@
 }
 
 #skillPage .skill-radar-panel summary::after {
-  content: "展开";
+  content: "\00D7";
   margin-left: auto;
   color: var(--muted);
   font-size: 12px;
 }
 
 #skillPage .skill-radar-panel[open] summary::after {
-  content: "收起";
+  content: "\00D7";
 }
 
 #skillPage .skill-radar-body {
@@ -4330,11 +4331,7 @@
 }
 
 @media (max-width: 720px) {
-  #itemsPage .item-table .inventory-row:not(.is-custom) > .inventory-field:has(.inventory-type-input) {
-    display: none !important;
-  }
-
-  #itemsPage .item-table .inventory-row:not(.is-custom) > .inventory-mobile-type-cell {
+#itemsPage .item-table .inventory-row > .inventory-mobile-type-cell {
     display: grid !important;
   }
 
@@ -4356,7 +4353,7 @@
   }
 
   #itemsPage .item-table .inventory-delete::before {
-    content: "×";
+    content: "\00D7";
     display: grid;
     place-items: center;
     width: 26px;
@@ -4367,17 +4364,159 @@
   }
 }
 @media (max-width: 720px) {
-  #itemsPage .item-table .inventory-row.is-custom > .inventory-mobile-type-cell {
-    display: none !important;
-  }
-
-  #itemsPage .item-table .inventory-row.is-custom > .inventory-field:has(.inventory-type-input) {
-    display: grid !important;
-  }
-
-  #itemsPage .item-table .inventory-delete {
-    top: -7px;
-    right: -7px;
+#itemsPage .item-table .inventory-delete {
+    top: -8px;
+    right: -8px;
     z-index: 2;
   }
+}
+/* Mobile refinements: items and final preview */
+@media (max-width: 720px) {
+  #itemsPage .item-table .other-item-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #itemsPage .item-table .other-item-row > .inventory-name-cell {
+    grid-column: auto;
+  }
+
+  #finalPage .final-readonly-grid,
+  #finalPage .final-profile-hero .final-readonly-grid,
+  #finalPage .final-section .final-readonly-grid,
+  #finalPage .final-skill-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  #finalPage .final-readonly-grid,
+  #finalPage .final-profile-hero .final-readonly-grid,
+  #finalPage .final-section .final-readonly-grid,
+  #finalPage .final-skill-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Inventory type picker */
+.inventory-type-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: stretch;
+  gap: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: var(--input-bg);
+}
+
+.inventory-type-control .inventory-type-input {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.inventory-type-picker-btn {
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.inventory-type-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 42, 70, .18);
+}
+
+.inventory-type-picker[hidden] {
+  display: none;
+}
+
+.inventory-type-picker-card {
+  width: min(520px, 100%);
+  max-height: min(70vh, 560px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 42px rgba(19, 47, 76, .18);
+}
+
+.inventory-type-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  color: var(--navy);
+}
+
+.inventory-type-picker-head button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.inventory-type-picker-list {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  overflow: auto;
+}
+
+.inventory-type-picker-list button {
+  min-height: 38px;
+  justify-content: flex-start;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--navy);
+  text-align: left;
+}
+
+.inventory-type-picker-list button:first-child {
+  background: var(--accent-soft);
+  font-weight: 900;
+}
+
+/* Mobile inventory type control should stay visible with the picker button */
+@media (max-width: 720px) {
+  #itemsPage .item-table .inventory-row > .inventory-field.inventory-type-cell {
+    display: grid !important;
+    grid-column: auto;
+  }
+
+  #itemsPage .item-table .inventory-row > .inventory-mobile-type-cell {
+    display: none !important;
+  }
+}
+.inventory-type-picker-search {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fafc;
+}
+
+.inventory-type-picker-search input {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff;
 }
