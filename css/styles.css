@@ -1,4 +1,4 @@
-:root {
+﻿:root {
       --bg: #f3f5f7;
       --paper: #ffffff;
       --paper-soft: #f8fafc;
@@ -456,14 +456,16 @@
     }
 
     .preview-section summary::after {
-      content: "\00D7";
-      color: var(--muted);
-      font-size: 12px;
+      content: "\25BE";
+      color: var(--navy);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1;
       letter-spacing: 0;
     }
 
     .preview-section[open] summary::after {
-      content: "\00D7";
+      content: "\25B4";
     }
 
     .preview-skill-list {
@@ -1800,7 +1802,10 @@
     }
 
     .skill-inputs input[disabled] {
-      opacity: .45;
+      color: #7b8794;
+      background: #e9eef4;
+      border-color: #d1dae6;
+      opacity: 1;
       cursor: not-allowed;
     }
 
@@ -4549,4 +4554,27 @@
   font-size: 14px;
   font-weight: 700;
   background: #fff;
+}
+#attributePage .attr-input.is-warning {
+  color: #d28a00;
+  border-color: #d28a00;
+}
+
+#attributePage .attr-input.is-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+#skillPage .skill-inputs label.is-disabled {
+  background: #f1f4f7;
+  border-color: #d7e1ec;
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+#skillPage .skill-inputs label.is-disabled input[type="number"][disabled] {
+  color: #111;
+  background: transparent;
+  border-color: transparent;
+  opacity: 1;
+  cursor: not-allowed;
 }

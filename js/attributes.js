@@ -1,4 +1,4 @@
-function renderAttributeSheet() {
+﻿function renderAttributeSheet() {
   const sheet = $("attributeSheet");
   sheet.innerHTML = attributes.map((attribute) => `
     <section class="attribute-cell${attribute.isLuck ? " luck-cell" : ""}">
@@ -25,6 +25,23 @@ function parseAttributeValue(id) {
   if (!raw) return null;
   const numeric = Number(raw);
   return Number.isFinite(numeric) ? numeric : null;
+}
+
+function getAttributeValueClass(value) {
+  if (value === null) return "";
+  if (value > 99) return "is-danger";
+  if (value > 80) return "is-warning";
+  return "";
+}
+
+function updateAttributeInputStates() {
+  attributes.forEach((attribute) => {
+    const input = $(attribute.id);
+    const value = parseAttributeValue(attribute.id);
+    input.classList.remove("is-warning", "is-danger");
+    const valueClass = getAttributeValueClass(value);
+    if (valueClass) input.classList.add(valueClass);
+  });
 }
 
 function formatAttributeValue(id) {
@@ -449,6 +466,7 @@ function updateAttributeCalculations() {
     return value === null ? sum : sum + value;
   }, 0);
   $("usedPoints").textContent = total;
+  updateAttributeInputStates();
   renderAttributeLevelNotes();
   renderSecondaryAttributePanel();
   renderAttributeRadar();

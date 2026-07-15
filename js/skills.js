@@ -1,4 +1,4 @@
-    function normalizeSearchText(text) {
+﻿    function normalizeSearchText(text) {
       return String(text || "").replace(/Ω/g, "").replace(/[\s　：:（）()、，。·/\\-]/g, "").toLowerCase();
     }
 
@@ -64,11 +64,15 @@
       return Number(skill.baseCachedValue) || 0;
     }
 
-    function getSkillTotal(skill) {
-      const state = getSkillState(skill.id);
-      return computeSkillBase(skill) + parsePointValue(state.career) + parsePointValue(state.interest);
+    function canUseCareerPoints(skill) {
+      return Boolean(getOccupationTagType(skill) || isTalentSkill(skill));
     }
 
+    function getSkillTotal(skill) {
+      const state = getSkillState(skill.id);
+      const career = canUseCareerPoints(skill) ? parsePointValue(state.career) : 0;
+      return computeSkillBase(skill) + career + parsePointValue(state.interest);
+    }
 
     function getSkillTotalClass(total) {
       if (total > 99) return " is-danger";
@@ -86,7 +90,7 @@
       const occupation = findSelectedOccupation();
       const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
       const careerUsed = getAllSkills().reduce((sum, skill) => {
-        if (!getOccupationTagType(skill) && !isTalentSkill(skill)) return sum;
+        if (!canUseCareerPoints(skill)) return sum;
         return sum + parsePointValue(getSkillState(skill.id).career);
       }, 0) + creditUsed;
       const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0);
@@ -378,8 +382,8 @@
             </div>
             <div class="skill-inputs">
               <div class="skill-base-box"><span>初始</span><strong data-skill-base>${base}</strong></div>
-              <label>职业
-                <input data-skill-input="career" type="number" inputmode="numeric" min="0" value="${escapeHTML(state.career || "")}" ${skill.lockCareer ? "disabled" : ""} />
+              <label class="${skill.lockCareer || !canUseCareerPoints(skill) ? "is-disabled" : ""}">职业
+                <input data-skill-input="career" type="number" inputmode="numeric" min="0" value="${escapeHTML(state.career || "")}" ${skill.lockCareer || !canUseCareerPoints(skill) ? "disabled" : ""} />
               </label>
               <label>兴趣
                 <input data-skill-input="interest" type="number" inputmode="numeric" min="0" value="${escapeHTML(state.interest || "")}" ${skill.lockInterest ? "disabled" : ""} />
@@ -567,7 +571,7 @@
       fillDefaultCreditRating(false);
       const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
       const careerUsed = getAllSkills().reduce((sum, skill) => {
-        if (!getOccupationTagType(skill) && !isTalentSkill(skill)) return sum;
+        if (!canUseCareerPoints(skill)) return sum;
         return sum + parsePointValue(getSkillState(skill.id).career);
       }, 0) + creditUsed;
       const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0);
