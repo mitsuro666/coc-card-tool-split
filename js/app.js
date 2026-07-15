@@ -10,6 +10,7 @@ function initApp() {
   initImages();
   initRouter();
   initStorage();
+  initDataTransfer();
 
   restore();
   initDetailsState();
