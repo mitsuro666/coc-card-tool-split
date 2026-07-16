@@ -82,18 +82,21 @@
 
     function setPointSummaryState(el, used, target) {
       if (!el) return;
+      const usedEl = el.querySelector(".point-used");
+      if (!usedEl) return;
       const hasLimit = target !== null && target !== undefined && Number.isFinite(Number(target)) && Number(target) > 0;
-      el.classList.toggle("is-danger", Boolean(hasLimit && used > Number(target)));
+      usedEl.classList.toggle("is-under", Boolean(hasLimit && used < Number(target)));
+      usedEl.classList.toggle("is-danger", Boolean(hasLimit && used > Number(target)));
     }
 
     function getSkillPointLimitState() {
       const occupation = findSelectedOccupation();
-      const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
+      const creditUsage = getCreditPointUsage(occupation);
       const careerUsed = getAllSkills().reduce((sum, skill) => {
         if (!canUseCareerPoints(skill)) return sum;
         return sum + parsePointValue(getSkillState(skill.id).career);
-      }, 0) + creditUsed;
-      const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0);
+      }, 0) + creditUsage.career;
+      const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0) + creditUsage.interest;
       const careerTarget = occupation ? evaluateOccupationPointFormula(occupation.skillPointFormulaExcel) : null;
       const interestTarget = (parseAttributeValue("attrINT") || 0) * 2;
       const careerHasLimit = careerTarget !== null && Number.isFinite(Number(careerTarget)) && Number(careerTarget) > 0;
@@ -474,6 +477,20 @@
       return match ? Number(match[0]) : null;
     }
 
+    function parseCreditRangeMaximum(rangeText) {
+      const matches = String(rangeText || "").match(/\d+/g);
+      return matches && matches.length ? Number(matches[matches.length - 1]) : null;
+    }
+
+    function getCreditPointUsage(occupation = findSelectedOccupation()) {
+      const value = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
+      const maximum = occupation ? parseCreditRangeMaximum(occupation.creditRange) : null;
+      if (maximum === null) return { career: value, interest: 0 };
+      return {
+        career: Math.min(value, maximum),
+        interest: Math.max(0, value - maximum)
+      };
+    }
     function fillDefaultCreditRating(force = false) {
       if (!creditRatingValue) return;
       const occupation = findSelectedOccupation();
@@ -545,11 +562,11 @@
       if (creditRatingValue) creditRatingValue.value = "";
       fillDefaultCreditRating(true);
 
-      const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
+      const creditUsage = getCreditPointUsage(occupation);
       const careerSkills = getAutoCareerSkills();
       const interestSkills = getAutoInterestSkills();
-      const careerAssigned = distributePointsEvenly(Math.max(0, careerTarget - creditUsed), careerSkills, "career");
-      const interestAssigned = distributePointsEvenly(interestTarget, interestSkills, "interest");
+      const careerAssigned = distributePointsEvenly(Math.max(0, careerTarget - creditUsage.career), careerSkills, "career");
+      const interestAssigned = distributePointsEvenly(Math.max(0, interestTarget - creditUsage.interest), interestSkills, "interest");
 
       renderSkillList();
       persist();
@@ -569,18 +586,18 @@
       if (!$("careerPointSummary")) return;
       const occupation = findSelectedOccupation();
       fillDefaultCreditRating(false);
-      const creditUsed = creditRatingValue ? parsePointValue(creditRatingValue.value) : 0;
+      const creditUsage = getCreditPointUsage(occupation);
       const careerUsed = getAllSkills().reduce((sum, skill) => {
         if (!canUseCareerPoints(skill)) return sum;
         return sum + parsePointValue(getSkillState(skill.id).career);
-      }, 0) + creditUsed;
-      const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0);
+      }, 0) + creditUsage.career;
+      const interestUsed = getAllSkills().reduce((sum, skill) => sum + parsePointValue(getSkillState(skill.id).interest), 0) + creditUsage.interest;
       const careerTarget = occupation ? evaluateOccupationPointFormula(occupation.skillPointFormulaExcel) : null;
       const interestTarget = (parseAttributeValue("attrINT") || 0) * 2;
       const careerSummary = $("careerPointSummary");
       const interestSummary = $("interestPointSummary");
-      careerSummary.textContent = `${careerUsed} / ${careerTarget === null ? "未计算" : careerTarget}`;
-      interestSummary.textContent = `${interestUsed} / ${interestTarget || "未计算"}`;
+      careerSummary.innerHTML = `<span class="point-used">${careerUsed}</span> / <span class="point-limit">${careerTarget === null ? "未计算" : careerTarget}</span>`;
+      interestSummary.innerHTML = `<span class="point-used">${interestUsed}</span> / <span class="point-limit">${interestTarget || "未计算"}</span>`;
       setPointSummaryState(careerSummary, careerUsed, careerTarget);
       setPointSummaryState(interestSummary, interestUsed, interestTarget);
       $("creditRangeSummary").textContent = occupation && occupation.creditRange ? occupation.creditRange : "未读取";

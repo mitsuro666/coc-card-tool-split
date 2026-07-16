@@ -1,4 +1,4 @@
-let customSkillData = [];
+﻿let customSkillData = [];
 
     function getAllSkills() {
       return [...skillDatabase, ...customSkillData];
@@ -34,88 +34,7 @@ let customSkillData = [];
     ];
 
 
-    const attributeLevelNoteRules = {
-      attrSTR: [
-        { max: 0, text: "衰弱：没法站起来甚至端起一杯茶" },
-        { max: 15, text: "弱者，虚弱" },
-        { max: 50, text: "普通人水平" },
-        { max: 90, text: "你见过的力气最大的人" },
-        { max: 99, text: "世界水平（奥赛举重冠军），人类极限" },
-        { max: 140, text: "超越人类之力（例如大猩猩或马）" },
-        { max: Infinity, text: "怪物之力" }
-      ],
-      attrCON: [
-        { max: 0, text: "死亡" },
-        { max: 1, text: "体弱多病，易病难愈，可能在没有帮助的情况下无法自理" },
-        { max: 15, text: "身体虚弱，易突发疾病，易感到疼痛" },
-        { max: 50, text: "普通人水平" },
-        { max: 90, text: "不惧寒冷，强壮而精神" },
-        { max: 99, text: "钢铁之躯，能够承受巨大的疼痛，人类极限" },
-        { max: 140, text: "超越人类之体格（例如大象）" },
-        { max: Infinity, text: "怪物之体，免疫大部分地球疾病" }
-      ],
-      attrPOW: [
-        { max: 0, text: "弱者的心，没有意志力，没有魔法潜能" },
-        { max: 15, text: "意志力弱，经常成为高智力或高意志人士的人偶或玩物" },
-        { max: 50, text: "普通人" },
-        { max: 90, text: "坚强的心，对沟通不可视之物和魔法有着高潜质" },
-        { max: 100, text: "钢铁之心，与灵能领域和不可视世界有着强烈的链接" },
-        { max: 140, text: "超越人类，基本上是异界存在" },
-        { max: Infinity, text: "怪物的魔法潜质和力量，超越凡人之理解力" }
-      ],
-      attrDEX: [
-        { max: 0, text: "没有协助无法移动" },
-        { max: 15, text: "缓慢，笨拙，无法行动自如" },
-        { max: 50, text: "普通人水平" },
-        { max: 90, text: "高速而灵活，可以达成超凡的技艺（例如杂技演员，伟大的舞者）" },
-        { max: 99, text: "世界级运动员。人类极限" },
-        { max: 120, text: "超越人类之速（例如虎）" },
-        { max: Infinity, text: "闪电之速，可以在人类反应过来之前完成一系列动作" }
-      ],
-      attrAPP: [
-        { max: 0, text: "十分难看，他人会对你报以恐惧、厌恶和怜悯" },
-        { max: 15, text: "挫。估计是因为受伤事故或先天如此" },
-        { max: 50, text: "普通人水平" },
-        { max: 90, text: "你见过的最漂亮的人，有着天然的吸引力" },
-        { max: Infinity, text: "魅力和酷的巅峰（超级名模或世界影星），人类极限" }
-      ],
-      attrEDU: [
-        { max: 0, text: "新生儿" },
-        { max: 15, text: "任何方面都没有受过教育" },
-        { max: 60, text: "高中毕业" },
-        { max: 70, text: "大学毕业（专科学位）" },
-        { max: 80, text: "研究生毕业（硕士学位）" },
-        { max: 90, text: "博士学位，教授" },
-        { max: 96, text: "某研究领域的世界级权威" },
-        { max: Infinity, text: "人类极限" }
-      ],
-      attrSIZ: [
-        { max: 1, text: "一个婴儿（1～12磅）" },
-        { max: 15, text: "孩童，或身短体瘦（矮人）（33磅/15kg）" },
-        { max: 65, text: "普通人类体型（中等身高和体重）（170磅/75kg）" },
-        { max: 80, text: "非常高，强健的体格或非常胖（240磅/110kg）" },
-        { max: 99, text: "某方面已经是超大号了（330磅/150kg）" },
-        { max: 150, text: "马或牛（960磅/436kg）" },
-        { max: 180, text: "记录中最重的人类（1400磅/634kg）" },
-        { max: Infinity, text: "1920磅/872kg" }
-      ],
-      attrINT: [
-        { max: 0, text: "没有智商，无法理解周遭的世界" },
-        { max: 15, text: "学得很慢，只能理解最常用的数字，或阅读学前教育级别的书" },
-        { max: 50, text: "普通人水平" },
-        { max: 90, text: "超凡之脑，可以理解多门语言或定理" },
-        { max: 99, text: "天才（爱因斯坦、达芬奇、特斯拉等等）。人类极限" },
-        { max: 140, text: "超越人类之智" },
-        { max: Infinity, text: "怪物之智，可以理解并操作多重次元" }
-      ],
-      attrLuck: [
-        { max: 20, text: "克夫克妻" },
-        { max: 40, text: "霉运连连" },
-        { max: 60, text: "命格平庸" },
-        { max: 80, text: "在马路边捡到100块" },
-        { lt: 100, text: "被幸运女神所眷顾" }
-      ]
-    };
+    const attributeLevelNoteRules = window.attributeLevelNoteRules || {};
     const attributeNotes = {
       attrSTR: "衡量了你的调查员能发挥出的纯粹的身体力量,影响伤害加值和体格",
       attrCON: "用于衡量你的调查员的健康与强韧程度",

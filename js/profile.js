@@ -1,13 +1,14 @@
 ﻿let pendingProfessionMatch = null;
+let professionPickerOpen = false;
 
 function setOccupationHint(text) {
   occupationHint.textContent = text || "";
   occupationHint.hidden = !text;
 }
 
-function findProfessionMatches(keyword) {
+function findProfessionMatches(keyword, includeAll = false) {
   const text = keyword.trim().toLowerCase();
-  if (!text) return [];
+  if (!text) return includeAll ? [...professions].sort((a, b) => a.name.localeCompare(b.name, "zh-CN")) : [];
   return professions.filter((p) => {
     return p.name.toLowerCase().includes(text) ||
       p.tags.some((tag) => tag.toLowerCase().includes(text));
@@ -69,17 +70,21 @@ function autoMatchProfession() {
     return;
   }
 
-  pendingProfessionMatch = matches[0];
-  $("matchName").textContent = pendingProfessionMatch.name;
-  $("matchMeta").textContent = pendingProfessionMatch.meta;
-  openModal("matchModal");
+  if (matches.length === 1) {
+    applyProfession(matches[0]);
+    showStatus("saveStatus", "已匹配职业：" + matches[0].name);
+    return;
+  }
+
+  showProfessionPicker(keyword);
+  showStatus("saveStatus", "找到多个匹配职业，请选择一个。");
 }
 
 function applyProfession(profession) {
   occupation.value = profession.name;
   if (occupationIdInput) occupationIdInput.value = profession.occupationId !== undefined ? String(profession.occupationId) : "";
   setOccupationHint(profession.meta);
-  professionResults.classList.remove("show");
+  hideProfessionPicker();
   fillDefaultCreditRating(true);
   markPreviewDirty("basic");
   renderSkillList();
@@ -89,42 +94,64 @@ function applyProfession(profession) {
 
 function positionProfessionResults() {
   if (!professionResults.classList.contains("show")) return;
-  const rect = occupation.getBoundingClientRect();
-  const margin = 8;
-  const left = Math.max(12, rect.left);
-  const width = Math.min(rect.width, window.innerWidth - left - 12);
+  const margin = 10;
+  const width = Math.min(680, window.innerWidth - 24);
+  const left = Math.max(12, Math.min(window.innerWidth - width - 12, occupation.getBoundingClientRect().left));
   professionResults.style.left = `${left}px`;
-  professionResults.style.top = `${rect.bottom + margin}px`;
+  professionResults.style.top = `${margin}px`;
   professionResults.style.width = `${width}px`;
-  professionResults.style.maxHeight = `${Math.max(180, window.innerHeight - rect.bottom - 96)}px`;
+  professionResults.style.maxHeight = `${Math.max(260, window.innerHeight - margin * 2)}px`;
 }
-function showProfessionMatches(keyword) {
-  const text = keyword.trim().toLowerCase();
-  if (!text) {
-    professionResults.classList.remove("show");
-    professionResults.innerHTML = "";
-    setOccupationHint("");
-    return;
-  }
 
-  const matches = findProfessionMatches(keyword);
-
+function renderProfessionPickerList(keyword) {
+  const matches = findProfessionMatches(keyword, true);
+  const list = professionResults.querySelector("[data-profession-list]");
+  if (!list) return;
   if (!matches.length) {
-    professionResults.innerHTML = `<div class="profession-option"><div class="profession-name">没有匹配结果</div><div class="profession-meta">可以手动填写。</div></div>`;
-    professionResults.classList.add("show");
+    list.innerHTML = `<div class="profession-option"><div class="profession-name">没有匹配结果</div><div class="profession-meta">可以继续输入，或使用自定义职业。</div></div>`;
     return;
   }
-
-  professionResults.innerHTML = matches.map((p, idx) => `
+  list.innerHTML = matches.map((p, idx) => `
     <div class="profession-option" data-index="${idx}">
       <div class="profession-name">${p.name}</div>
       <div class="profession-meta">${p.meta}</div>
     </div>
   `).join("");
-
-  professionResults.classList.add("show");
 }
 
+function showProfessionPicker(keyword = occupation.value) {
+  professionPickerOpen = true;
+  professionResults.innerHTML = `
+    <div class="profession-picker-head">
+      <strong>选择职业</strong>
+      <button type="button" class="profession-picker-close" data-close-profession-picker>关闭</button>
+    </div>
+    <div class="profession-picker-search"><input id="professionPickerSearch" type="text" autocomplete="off" value="${escapeHTML(keyword || "")}" /></div>
+    <div class="profession-picker-list" data-profession-list></div>
+  `;
+  professionResults.classList.add("show", "is-picker");
+  positionProfessionResults();
+  renderProfessionPickerList(keyword || "");
+  const search = $("professionPickerSearch");
+  if (search) {
+    search.focus();
+    search.setSelectionRange(search.value.length, search.value.length);
+  }
+}
+
+function hideProfessionPicker() {
+  professionPickerOpen = false;
+  professionResults.classList.remove("show", "is-picker");
+  professionResults.innerHTML = "";
+}
+
+function showProfessionMatches(keyword) {
+  if (professionPickerOpen) {
+    const search = $("professionPickerSearch");
+    if (search && search.value !== keyword) search.value = keyword;
+    renderProfessionPickerList(keyword);
+  }
+}
 function initProfile() {
   occupation.addEventListener("input", () => {
     if (creditRatingValue && !findExactProfession(occupation.value)) creditRatingValue.value = "";
@@ -141,14 +168,25 @@ function initProfile() {
     updateOccupationValidity();
   });
 
+  professionResults.addEventListener("input", (event) => {
+    if (event.target.id !== "professionPickerSearch") return;
+    renderProfessionPickerList(event.target.value);
+  });
+
   professionResults.addEventListener("click", (event) => {
+    if (event.target.closest("[data-close-profession-picker]")) {
+      hideProfessionPicker();
+      return;
+    }
     const option = event.target.closest(".profession-option[data-index]");
     if (!option) return;
-    const matches = findProfessionMatches(occupation.value);
+    const search = $("professionPickerSearch");
+    const matches = findProfessionMatches(search ? search.value : occupation.value, true);
     const selected = matches[Number(option.dataset.index)];
     if (selected) applyProfession(selected);
   });
 
+  $("occupationPickerToggle").addEventListener("click", () => showProfessionPicker(occupation.value));
   window.addEventListener("resize", positionProfessionResults);
   window.addEventListener("scroll", positionProfessionResults, true);
 
@@ -196,7 +234,7 @@ function initProfile() {
 
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".profession-wrap")) {
-      professionResults.classList.remove("show");
+      hideProfessionPicker();
     }
   });
 

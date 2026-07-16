@@ -212,6 +212,8 @@
 
     .profession-input-wrap {
       position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 44px;
     }
     .profession-results {
       display: none;
@@ -4577,4 +4579,83 @@
   border-color: transparent;
   opacity: 1;
   cursor: not-allowed;
+}
+#skillPage .skill-summary-bar strong .point-used,
+#skillPage .skill-summary-bar strong .point-limit {
+  color: var(--navy);
+}
+
+#skillPage .skill-summary-bar strong .point-used.is-under {
+  color: #2f8a55;
+}
+
+#skillPage .skill-summary-bar strong .point-used.is-danger {
+  color: var(--danger);
+}
+.profession-picker-toggle {
+  border-radius: 0 16px 16px 0;
+  border-left: 0;
+  padding: 0;
+  color: var(--navy);
+  background: var(--accent-soft);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+#profilePage .profession-input-wrap #occupation {
+  border-radius: 16px 0 0 16px;
+}
+
+.profession-results.is-picker {
+  position: fixed;
+  right: auto;
+  top: 10px;
+  max-height: calc(100vh - 20px);
+  display: flex;
+  flex-direction: column;
+}
+
+.profession-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.profession-picker-close {
+  padding: 8px 13px;
+  border-radius: 14px;
+}
+
+.profession-picker-search {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.profession-picker-list {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#attributePage .roll-title,
+#attributePage .roll-attributes {
+  margin-right: 12px;
+}
+#attributePage .fixed-roll-total {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+#attributePage .fixed-roll-total input {
+  width: 86px;
+  padding: 8px 10px;
+  text-align: center;
+}
+#attributePage .roll-history .roll-total {
+  font-weight: 900;
 }

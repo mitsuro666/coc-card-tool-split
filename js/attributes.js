@@ -491,11 +491,64 @@ function rollAttribute(attribute) {
 }
 
 function generateAttributeSet() {
+  const fixedTotalInput = $("fixedRollTotal");
+  const fixedTotal = fixedTotalInput ? Number(String(fixedTotalInput.value || "").trim()) : NaN;
+  if (fixedTotalInput && fixedTotalInput.value.trim()) return generateFixedTotalAttributeSet(fixedTotal);
+
   const values = {};
   attributes.forEach((attribute) => {
     if (!attribute.isLuck) values[attribute.key] = rollAttribute(attribute);
   });
   return values;
+}
+
+function getAttributeRandomRange(attribute) {
+  if (["EDU", "SIZ", "INT"].includes(attribute.key)) return { min: 40, max: 90 };
+  return { min: 15, max: 90 };
+}
+
+function validateFixedRollTotal(total) {
+  if (!Number.isFinite(total)) return "固定合计需填写数字。";
+  if (total < 195 || total > 720) return "固定合计需在 195-720 之间。";
+  if (total % 5 !== 0) return "固定合计需为5的倍数；如需微调，可生成后手动调整。";
+  return "";
+}
+
+function generateFixedTotalAttributeSet(total) {
+  const validation = validateFixedRollTotal(total);
+  if (validation) {
+    showStatus("attributeStatus", validation, true);
+    return null;
+  }
+
+  const pool = attributes.filter((attribute) => !attribute.isLuck);
+  for (let attempt = 0; attempt < 3000; attempt += 1) {
+    const values = {};
+    let remaining = total;
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    let ok = true;
+    shuffled.forEach((attribute, index) => {
+      if (!ok) return;
+      const range = getAttributeRandomRange(attribute);
+      const rest = shuffled.slice(index + 1).map(getAttributeRandomRange);
+      const minRest = rest.reduce((sum, item) => sum + item.min, 0);
+      const maxRest = rest.reduce((sum, item) => sum + item.max, 0);
+      const minValue = Math.max(range.min, remaining - maxRest);
+      const maxValue = Math.min(range.max, remaining - minRest);
+      if (minValue > maxValue) {
+        ok = false;
+        return;
+      }
+      const steps = Math.floor((maxValue - minValue) / 5) + 1;
+      const value = minValue + Math.floor(Math.random() * steps) * 5;
+      values[attribute.key] = value;
+      remaining -= value;
+    });
+    if (ok && remaining === 0) return values;
+  }
+
+  showStatus("attributeStatus", "未能生成该固定合计，请换一个数值。", true);
+  return null;
 }
 
 function getGeneratedTotal(values) {
@@ -526,6 +579,7 @@ function addRollRecord(count = 1) {
       text: formatRollText(values)
     });
   }
+  if (!newRecords.length) return;
   rollHistoryData = [...newRecords, ...rollHistoryData].slice(0, 5);
   renderRollHistory();
   persist();
@@ -613,9 +667,12 @@ function initAttributes() {
 
   attributeFieldIds.forEach((id) => {
     $(id).addEventListener("input", () => {
+      const input = $(id);
+      const value = Number(input.value);
+      if (Number.isFinite(value) && value <= 0) input.value = "1";
       if (id === "attrAPP") {
-        const appValue = Number($(id).value);
-        if (Number.isFinite(appValue) && appValue > 99) $(id).value = "99";
+        const appValue = Number(input.value);
+        if (Number.isFinite(appValue) && appValue > 99) input.value = "99";
       }
       updateAttributeCalculations();
       updateSkillCalculations();
