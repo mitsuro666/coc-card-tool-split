@@ -1,4 +1,5 @@
 ﻿let customSkillData = [];
+let customProfessionData = null;
 
     function getAllSkills() {
       return [...skillDatabase, ...customSkillData];
@@ -246,3 +247,5 @@ let ageAdjustmentState = { applied: false, age: "", adjustments: {}, movePenalty
     function escapeHTML(value) {
       return String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
     }
+
+

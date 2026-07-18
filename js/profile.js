@@ -1,6 +1,109 @@
 ﻿let pendingProfessionMatch = null;
 let professionPickerOpen = false;
 
+const customProfessionRuleAttrs = [
+  { key: "STR", label: "力量" },
+  { key: "CON", label: "体质" },
+  { key: "SIZ", label: "体型" },
+  { key: "DEX", label: "敏捷" },
+  { key: "APP", label: "外貌" },
+  { key: "INT", label: "智力" },
+  { key: "POW", label: "意志" },
+  { key: "EDU", label: "教育" }
+];
+
+function buildCustomProfessionMeta(data) {
+  if (!data) return "";
+  return [
+    data.creditRange ? "信用评级：" + data.creditRange : "",
+    data.attributeFormulaText ? "职业属性：" + data.attributeFormulaText : "",
+    data.occupationSkillsText ? "本职技能：" + data.occupationSkillsText : ""
+  ].filter(Boolean).join("　");
+}
+
+function getSkillSelectOptions(selected = "") {
+  return getAllSkills().map((skill) => {
+    const name = getSkillDisplayName(skill) || skill.name;
+    return `<option value="${escapeHTML(name)}"${name === selected ? " selected" : ""}>${escapeHTML(name)}</option>`;
+  }).join("");
+}
+
+function renderCustomProfessionRules(rules = []) {
+  const list = $("customProfessionRules");
+  if (!list) return;
+  const rows = Array.from({ length: 3 }, (_, index) => rules[index] || {});
+  list.innerHTML = rows.map((rule, index) => `
+    <div class="custom-rule-row" data-rule-index="${index}">
+      <select data-custom-rule-attr>
+        <option value="">属性</option>
+        ${customProfessionRuleAttrs.map((attr) => `<option value="${attr.key}"${rule.attr === attr.key ? " selected" : ""}>${attr.label}</option>`).join("")}
+      </select>
+      <input data-custom-rule-multiplier type="number" min="1" max="10" value="${rule.multiplier || ""}" />
+      <span>倍</span>
+    </div>
+  `).join("");
+}
+
+function addCustomProfessionSkillRow(value = "") {
+  const list = $("customProfessionSkillList");
+  if (!list) return;
+  const row = document.createElement("div");
+  row.className = "custom-profession-skill-row";
+  row.innerHTML = `
+    <select data-custom-profession-skill>
+      <option value="">选择技能</option>
+      ${getSkillSelectOptions(value)}
+    </select>
+    <button class="ghost small" type="button" data-remove-custom-profession-skill>删除</button>
+  `;
+  list.appendChild(row);
+}
+
+function renderCustomProfessionSkills(skills = []) {
+  const list = $("customProfessionSkillList");
+  if (!list) return;
+  list.innerHTML = "";
+  (skills.length ? skills : [""]).forEach((skillName) => addCustomProfessionSkillRow(skillName));
+}
+
+function openCustomProfessionModal() {
+  const existing = customProfessionData && customProfessionData.name === occupation.value.trim() ? customProfessionData : null;
+  $("customProfessionName").value = existing ? existing.name : occupation.value.trim();
+  $("customCreditMin").value = existing ? existing.creditMin || "" : "";
+  $("customCreditMax").value = existing ? existing.creditMax || "" : "";
+  renderCustomProfessionRules(existing ? existing.rules || [] : []);
+  renderCustomProfessionSkills(existing ? existing.skills || [] : []);
+  openModal("customProfessionModal");
+}
+
+function collectCustomProfessionData() {
+  const name = $("customProfessionName").value.trim();
+  const creditMin = $("customCreditMin").value.trim();
+  const creditMax = $("customCreditMax").value.trim();
+  const rules = Array.from(document.querySelectorAll("#customProfessionRules .custom-rule-row")).map((row) => ({
+    attr: row.querySelector("[data-custom-rule-attr]").value,
+    multiplier: Number(row.querySelector("[data-custom-rule-multiplier]").value || 0)
+  })).filter((rule) => rule.attr && rule.multiplier > 0);
+  const skills = Array.from(document.querySelectorAll("#customProfessionSkillList [data-custom-profession-skill]"))
+    .map((select) => select.value.trim())
+    .filter(Boolean);
+  const creditRange = creditMin || creditMax ? `${creditMin || 0}-${creditMax || creditMin || 0}` : "";
+  const formula = rules.map((rule) => `${rule.attr}*${rule.multiplier}`).join("+");
+  return {
+    id: "custom",
+    name,
+    creditMin,
+    creditMax,
+    creditRange,
+    rules,
+    attributeFormulaText: formula,
+    skillPointFormulaExcel: formula,
+    skills,
+    occupationSkillsText: skills.join("，")
+  };
+}
+
+
 function setOccupationHint(text) {
   occupationHint.textContent = text || "";
   occupationHint.hidden = !text;
@@ -80,6 +183,15 @@ function autoMatchProfession() {
   showStatus("saveStatus", "找到多个匹配职业，请选择一个。");
 }
 
+function randomizeProfession() {
+  if (!professions.length) {
+    showStatus("saveStatus", "职业库为空，无法随机职业。", true);
+    return;
+  }
+  const selected = professions[Math.floor(Math.random() * professions.length)];
+  applyProfession(selected);
+  showStatus("saveStatus", "已随机职业：" + selected.name);
+}
 function applyProfession(profession) {
   occupation.value = profession.name;
   if (occupationIdInput) occupationIdInput.value = profession.occupationId !== undefined ? String(profession.occupationId) : "";
@@ -191,6 +303,7 @@ function initProfile() {
   window.addEventListener("scroll", positionProfessionResults, true);
 
   $("autoMatchOccupation").addEventListener("click", autoMatchProfession);
+  $("randomOccupation").addEventListener("click", randomizeProfession);
 
   $("confirmMatch").addEventListener("click", () => {
     if (pendingProfessionMatch) {
@@ -200,36 +313,40 @@ function initProfile() {
     closeModal("matchModal");
   });
 
-  $("customOccupation").addEventListener("click", () => {
-    $("customProfessionName").value = occupation.value.trim();
-    openModal("customProfessionModal");
+  $("customOccupation").addEventListener("click", openCustomProfessionModal);
+
+  $("addCustomProfessionSkill").addEventListener("click", () => addCustomProfessionSkillRow(""));
+
+  $("customProfessionSkillList").addEventListener("click", (event) => {
+    if (!event.target.closest("[data-remove-custom-profession-skill]")) return;
+    const rows = Array.from(document.querySelectorAll("#customProfessionSkillList .custom-profession-skill-row"));
+    if (rows.length <= 1) return;
+    event.target.closest(".custom-profession-skill-row").remove();
   });
 
   $("saveCustomProfession").addEventListener("click", () => {
-    const name = $("customProfessionName").value.trim();
-    if (!name) {
+    const data = collectCustomProfessionData();
+    if (!data.name) {
       showStatus("saveStatus", "请填写自定义职业名称。", true);
       return;
     }
+    if (!data.occupationSkillsText) {
+      showStatus("saveStatus", "自定义职业至少需要选择一个职业技能。", true);
+      return;
+    }
 
-    const credit = $("customCreditRange").value.trim();
-    const formula = $("customSkillFormula").value.trim();
-    const skills = $("customProfessionSkills").value.trim();
-
-    occupation.value = name;
+    customProfessionData = data;
+    occupation.value = data.name;
     if (occupationIdInput) occupationIdInput.value = "";
-    if (creditRatingValue) creditRatingValue.value = parseCreditRangeMinimum(credit) ?? "";
-    setOccupationHint([
-      credit ? "信用评级：" + credit : "",
-      formula ? "职业技能点规则：" + formula : "",
-      skills ? "职业技能：" + skills : ""
-    ].filter(Boolean).join("　") || "自定义职业");
+    if (creditRatingValue) creditRatingValue.value = parseCreditRangeMinimum(data.creditRange) ?? "";
+    setOccupationHint(buildCustomProfessionMeta(data) || "自定义职业");
 
     markPreviewDirty("all");
+    renderSkillList();
     updateSkillSummary();
     persist();
     closeModal("customProfessionModal");
-    showStatus("saveStatus", "已保存自定义职业：" + name);
+    showStatus("saveStatus", "已保存自定义职业：" + data.name);
   });
 
   document.addEventListener("click", (event) => {
@@ -335,6 +452,10 @@ function initProfile() {
     showStatus("saveStatus", "已清空本页内容。");
   });
 }
+
+
+
+
 
 
 

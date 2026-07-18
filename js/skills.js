@@ -114,9 +114,12 @@
       }
       const selected = occupation.value.trim();
       if (!selected) return null;
-      return occupationDatabase.find((job) => job.name === selected) ||
+      const databaseMatch = occupationDatabase.find((job) => job.name === selected) ||
         occupationDatabase.find((job) => job.name && job.name.includes(selected)) ||
         occupationDatabase.find((job) => selected.includes(job.name));
+      if (databaseMatch) return databaseMatch;
+      if (customProfessionData && customProfessionData.name === selected) return customProfessionData;
+      return null;
     }
 
     function buildSkillKeywords(skill) {
@@ -855,6 +858,7 @@ function initSkills() {
     }
   });
 }
+
 
 
 

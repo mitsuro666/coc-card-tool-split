@@ -1,4 +1,4 @@
-let saveTimer = null;
+﻿let saveTimer = null;
 
 function collectData() {
   const profile = {};
@@ -21,6 +21,7 @@ function collectData() {
     rollHistoryData,
     skills: skillPointData,
     customSkills: customSkillData,
+    customProfession: customProfessionData,
     talentSkillIds,
     creditRatingValue: creditRatingValue ? creditRatingValue.value : "",
     skillFilter: currentSkillFilter,
@@ -88,6 +89,7 @@ function restore() {
       rollHistoryData = Array.isArray(data.rollHistoryData) ? data.rollHistoryData.slice(0, 5) : [];
       skillPointData = data.skills && typeof data.skills === "object" ? data.skills : {};
       customSkillData = Array.isArray(data.customSkills) ? data.customSkills.map(normalizeCustomSkill).filter(Boolean) : [];
+      customProfessionData = data.customProfession && typeof data.customProfession === "object" ? data.customProfession : null;
       talentSkillIds = Array.isArray(data.talentSkillIds) ? data.talentSkillIds.map(String) : [];
       if (creditRatingValue && data.creditRatingValue !== undefined) creditRatingValue.value = data.creditRatingValue;
       const savedSkillFilter = data.skillFilter === "specialized" || data.skillFilter === "occupation" || data.skillFilter === "common" ? "all" : (data.skillFilter || "all");
@@ -169,7 +171,7 @@ function restore() {
         restoredOccupation.occupationSkillsText ? "本职技能：" + truncateText(restoredOccupation.occupationSkillsText) : ""
       ].filter(Boolean).join("　");
       setOccupationHint(hintText);
-      if (occupationIdInput && !occupationIdInput.value) occupationIdInput.value = String(restoredOccupation.id);
+      if (occupationIdInput && !occupationIdInput.value && restoredOccupation.id !== "custom") occupationIdInput.value = String(restoredOccupation.id);
       fillDefaultCreditRating(false);
     }
     markPreviewDirty("all");
@@ -205,3 +207,6 @@ function initDetailsState() {
 function initStorage() {
   window.addEventListener("beforeunload", () => flushPersist(true));
 }
+
+
+

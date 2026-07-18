@@ -161,6 +161,7 @@
             </div>
             <div class="field-actions">
               <button class="secondary" type="button" id="autoMatchOccupation">自动匹配</button>
+              <button class="secondary" type="button" id="randomOccupation">随机职业</button>
               <button class="ghost" type="button" id="customOccupation">自定义职业</button>
             </div>
             <div class="hint" id="occupationHint" hidden></div>
@@ -541,20 +542,20 @@
           <input id="customProfessionName" type="text" />
         </div>
         <div class="field">
-          <label for="customCreditRange">信用评级范围</label>
-          <input id="customCreditRange" type="text" />
+          <label>信用评级范围</label>
+          <div class="inline-field-grid credit-range-grid">
+            <label class="inline-input-label">最小值 <input id="customCreditMin" type="number" min="0" max="99" /></label>
+            <label class="inline-input-label">最大值 <input id="customCreditMax" type="number" min="0" max="99" /></label>
+          </div>
         </div>
         <div class="field">
-          <label for="customSkillFormula">职业技能点规则</label>
-          <input id="customSkillFormula" type="text" placeholder="例：教育X2" />
+          <label>职业技能点规则</label>
+          <div class="custom-rule-list" id="customProfessionRules"></div>
         </div>
         <div class="field">
-          <label for="customProfessionSkills">职业技能</label>
-          <textarea id="customProfessionSkills" rows="4"></textarea>
-        </div>
-        <div class="field">
-          <label for="customProfessionNote">备注</label>
-          <textarea id="customProfessionNote" rows="3"></textarea>
+          <label>职业技能</label>
+          <div class="custom-profession-skill-list" id="customProfessionSkillList"></div>
+          <button class="secondary small" type="button" id="addCustomProfessionSkill">添加职业技能</button>
         </div>
       </div>
       <div class="modal-actions">
@@ -638,3 +639,5 @@
     })();
   </script></body>
 </html>
+
+

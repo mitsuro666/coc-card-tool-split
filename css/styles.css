@@ -4659,3 +4659,68 @@
 #attributePage .roll-history .roll-total {
   font-weight: 900;
 }
+.inline-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.custom-rule-list,
+.custom-profession-skill-list {
+  display: grid;
+  gap: 10px;
+}
+
+.custom-rule-row,
+.custom-profession-skill-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.custom-profession-skill-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.inline-input-label {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.inline-input-label input {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  #attributePage .roll-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #attributePage .fixed-roll-total {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  #attributePage .fixed-roll-total input {
+    width: 100%;
+  }
+
+  #attributePage .roll-actions button {
+    width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+  }
+}
